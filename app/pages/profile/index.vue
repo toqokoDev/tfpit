@@ -1,13 +1,12 @@
+<script lang="ts" setup>
+definePageMeta({
+  layout: 'blank',
+  middleware: 'auth',
+});
+</script>
+
 <template>
   <div>
     
   </div>
 </template>
-
-<script lang="ts" setup>
-
-</script>
-
-<style>
-
-</style>

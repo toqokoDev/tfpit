@@ -47,7 +47,12 @@ export default defineNuxtConfig({
     ],
   },
 
-  modules: ['shadcn-nuxt', '@nuxtjs/tailwindcss', '@nuxtjs/color-mode'],
+  modules: [
+    'shadcn-nuxt',
+    '@nuxtjs/supabase',
+    '@nuxtjs/tailwindcss',
+    '@nuxtjs/color-mode'
+  ],
 
   colorMode: {
     classSuffix: ''
@@ -57,4 +62,9 @@ export default defineNuxtConfig({
     prefix: 'ui',
     componentDir: './components/ui',
   },
-})
+
+  supabase: {
+    types: './shared/types/supabase.ts',
+    redirect: false,
+  }
+});

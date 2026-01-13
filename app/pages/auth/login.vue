@@ -7,6 +7,8 @@
 // ----- Data -----
 // ----------------
 
+const supabase = useSupabaseClient();
+
 const isLoginProcessing = ref<boolean>(false);
 const loginErrorMessageKey = ref<string | null>(null);
 
@@ -40,15 +42,24 @@ const login = handleSubmit(async (values) => {
   try {
     loginErrorMessageKey.value = null;
     isLoginProcessing.value = true;
-    
-    console.log(values);
 
-    return navigateTo({
-      path: '/profile',
-      query: { from: 'login' },
-    });
+    const { error: loginError } = await supabase
+      .auth
+      .signInWithPassword({ ...values });
+
+    if (loginError) {
+      if (loginError.code === 'invalid_credentials') {
+        loginErrorMessageKey.value = 'Неверные логин или пароль';
+        isLoginProcessing.value = false;
+        return;
+      }
+
+      throw loginError;
+    }
+
+    return navigateTo('/profile');
   } catch (error) {
-    loginErrorMessageKey.value = 'errors.somethingWentWrong';
+    loginErrorMessageKey.value = 'Ошибка при входе';
     isLoginProcessing.value = false;
   }
 });
@@ -109,6 +120,13 @@ const login = handleSubmit(async (values) => {
                 :is-processing="isLoginProcessing"
               />
             </ui-field>
+
+            <div class="text-center text-sm">
+              Ещё нет аккаунта?
+              <router-link to="/auth/register" class="underline underline-offset-4 hover:text-primary">
+                Зарегистрироваться
+              </router-link>
+            </div>
           </ui-field-group>
         </form>
       </div>

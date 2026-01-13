@@ -1,20 +1,25 @@
 <script lang="ts" setup>
-  import { toTypedSchema } from "@vee-validate/zod";
-  import { useForm } from "vee-validate";
-  import { AlertCircleIcon } from "lucide-vue-next";
+import { toTypedSchema } from "@vee-validate/zod";
+import { useForm } from "vee-validate";
+
+type Role = 'model' | 'photographer';
 
 // ----------------
 // ----- Data -----
 // ----------------
 
-const isLoginProcessing = ref<boolean>(false);
-const loginErrorMessageKey = ref<string | null>(null);
+const supabase = useSupabaseClient();
+const route = useRoute();
+const queryRole = route.query.role as Role;
+
+const isRegisterProcessing = ref<boolean>(false);
+const registerErrorMessageKey = ref<string | null>(null);
 
 // ----------------
 // ----- Page -----
 // ----------------
 
-useHead({ title: 'Вход' });
+useHead({ title: 'Регистрация' });
 
 definePageMeta({
   layout: 'blank'
@@ -25,8 +30,11 @@ definePageMeta({
 // -----------------
 
 const { handleSubmit } = useForm({
-  validationSchema: toTypedSchema(loginSchema),
+  validationSchema: toTypedSchema(registerSchema),
   initialValues: {
+    role: queryRole,
+    first_name: '',
+    last_name: '',
     email: '',
     password: '',
   },
@@ -36,20 +44,34 @@ const { handleSubmit } = useForm({
 // ----- Functions -----
 // ---------------------
 
-const login = handleSubmit(async (values) => {
+const register = handleSubmit(async (values) => {
   try {
-    loginErrorMessageKey.value = null;
-    isLoginProcessing.value = true;
-    
-    console.log(values);
+    registerErrorMessageKey.value = null;
+    isRegisterProcessing.value = true;
 
-    return navigateTo({
-      path: '/profile',
-      query: { from: 'login' },
+    const { error } = await supabase.auth.signUp({
+      email: values.email,
+      password: values.password,
+      options: {
+        data: {
+          first_name: values.first_name,
+          last_name: values.last_name,
+          role: values.role,
+        }
+      }
     });
+
+    if (error) {
+      registerErrorMessageKey.value = error.message;
+      isRegisterProcessing.value = false;
+      return;
+    }
+
+    isRegisterProcessing.value = false;
+    return navigateTo('/profile');
   } catch (error) {
-    loginErrorMessageKey.value = 'errors.somethingWentWrong';
-    isLoginProcessing.value = false;
+    registerErrorMessageKey.value = 'errors.somethingWentWrong';
+    isRegisterProcessing.value = false;
   }
 });
 </script>
@@ -62,53 +84,70 @@ const login = handleSubmit(async (values) => {
       </span>
       
       <div class="flex flex-1 items-center justify-center">
-        <form class="flex flex-col gap-6 w-full max-w-xs" @submit="login">
+        <form class="flex flex-col gap-6 w-full max-w-xs" @submit="register">
           <ui-field-group>
             <div class="flex flex-col items-center gap-1 text-center">
-              <h1 class="text-2xl font-bold">
-                Регистрация
-              </h1>
+              <h1 class="text-2xl font-bold">Создать аккаунт</h1>
               <p class="text-muted-foreground text-sm text-balance">
-                Создайте аккаунт, чтобы продолжить работу
+                Заполните данные для регистрации в TFP сообществе
               </p>
             </div>
 
-            <ui-alert
-              v-if="loginErrorMessageKey"
-              variant="destructive"
-              class="border-destructive"
-            >
-              <alert-circle-icon />
-              <ui-alert-title class="font-normal">
-                <p>{{ loginErrorMessageKey }}</p>
-              </ui-alert-title>
-            </ui-alert>
+            <div class="grid grid-cols-2 gap-2">
+              <base-input
+                name="first_name"
+                type="text"
+                label="Имя"
+                placeholder="Иван"
+              />
+              <base-input
+                name="last_name"
+                type="text"
+                label="Фамилия"
+                placeholder="Иванов"
+              />
+            </div>
+
+            <base-select
+              name="role"
+              label="Выберите роль"
+              placeholder="Кто вы?"
+              :options="[
+                { label: 'Модель', value: 'model' },
+                { label: 'Фотограф', value: 'photographer' }
+              ]"
+            />
 
             <base-input
               name="email"
               type="email"
-              label="Введите email"
+              label="Email"
               placeholder="email@example.com"
               autocomplete="email"
-              errors-to-show="all"
             />
 
             <base-input
               name="password"
               type="password"
-              label="Введите пароль"
+              label="Пароль"
               placeholder="********"
-              autocomplete="current-password"
-              errors-to-show="all"
+              autocomplete="new-password"
             />
 
             <ui-field>
               <base-processing-button
                 type="submit"
-                label="Зарегистрироваться"
-                :is-processing="isLoginProcessing"
+                label="Создать аккаунт"
+                :is-processing="isRegisterProcessing"
               />
             </ui-field>
+
+            <div class="text-center text-sm">
+              Уже есть аккаунта?
+              <router-link to="/auth/login" class="underline underline-offset-4 hover:text-primary">
+                Войти
+              </router-link>
+            </div>
           </ui-field-group>
         </form>
       </div>

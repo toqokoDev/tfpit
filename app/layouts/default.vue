@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { SunDim, MoonStar } from "lucide-vue-next";
+import { SunDim, MoonStar, UserCircle2 } from "lucide-vue-next";
 
-const colorMode = useColorMode()
+const colorMode = useColorMode();
+const user = useSupabaseUser();
 
 function toggleColor() {
-  colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
+  colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark';
 }
 </script>
 
@@ -31,19 +32,32 @@ function toggleColor() {
             @click="toggleColor"
           >
             <span v-if="colorMode.value === 'dark'" class="text-lg">
-              <moon-star class="size-4" />
+              <moon-star class="size-6" />
             </span>
             <span v-else class="text-lg">
-              <sun-dim class="size-4" />
+              <sun-dim class="size-6" />
             </span>
             <span class="sr-only">Переключить тему</span>
           </ui-button>
 
           <div class="h-6 w-[1px] bg-border mx-1 hidden sm:block"></div>
 
-          <NuxtLink to="/auth/login" as-child>
-            <ui-button size="sm" class="font-semibold shadow-md">Войти</ui-button>
-          </NuxtLink>
+          <template v-if="user">
+            <NuxtLink to="/profile">
+              <ui-button variant="outline" size="sm" class="font-semibold">
+                <user-circle2 class="size-6" />
+                <span>Профиль</span>
+              </ui-button>
+            </NuxtLink>
+          </template>
+
+          <template v-else>
+            <NuxtLink to="/auth/login">
+              <ui-button size="sm" class="font-semibold shadow-md">
+                Войти
+              </ui-button>
+            </NuxtLink>
+          </template>
         </div>
 
       </div>
