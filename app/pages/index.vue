@@ -19,11 +19,11 @@ useHead({ title: 'Главная' });
         Найдите фотографов, моделей и визажистов для совместных творческих проектов на условиях Time for Print.
       </p>
       <div class="flex flex-col justify-center gap-4 sm:flex-row">
-        <NuxtLink to="/auth/register?role=photographer" as-child>
+        <NuxtLink to="/offer" as-child>
           <ui-button size="lg" class="h-12 px-8 text-base">Найти проект</ui-button>
         </NuxtLink>
-        <NuxtLink to="/auth/register?role=model" as-child>
-          <ui-button size="lg" variant="outline" class="h-12 px-8 text-base">Стать моделью</ui-button>
+        <NuxtLink to="/auth/register" as-child>
+          <ui-button size="lg" variant="outline" class="h-12 px-8 text-base">Присоединиться</ui-button>
         </NuxtLink>
       </div>
     </section>

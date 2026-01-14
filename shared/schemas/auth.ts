@@ -58,9 +58,7 @@ export const registerSchema = zod
       .min(2, 'Фамилия слишком короткая (минимум 2 символа)')
       .max(50, 'Фамилия слишком длинная'),
 
-    role: zod.enum(['model', 'photographer'], {
-      errorMap: () => ({ message: 'Выберите роль: Модель или Фотограф' }),
-    }),
+    role: zod.string(),
 
     password: zod.string({ required_error: 'Введите пароль' })
       .min(1, 'Введите пароль')

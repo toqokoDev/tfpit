@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Field as VeeField } from "vee-validate";
+import { vMaska } from "maska/vue";
 
 // -----------------
 // ----- Types -----
@@ -41,6 +42,13 @@ type Props = {
    * @default 'first'
    */
   errorsToShow?: 'first' | 'all';
+
+  /**
+   * Input mask.
+   */
+  mask?: string;
+
+  disabled?: boolean
 };
 
 // ----------------
@@ -50,6 +58,8 @@ type Props = {
 const props = withDefaults(defineProps<Props>(), {
   autocomplete: 'off',
   errorsToShow: 'first',
+  disabled: false,
+  mask: '',
 });
 
 // ---------------------
@@ -85,10 +95,12 @@ function getErrors(errors: string[]): string[] {
       <ui-input
         :id="name"
         :type="type"
+        :disabled="disabled"
         :placeholder="placeholder"
         :autocomplete="autocomplete"
         :aria-invalid="!!errors.length"
         v-bind="field"
+        v-maska="mask"
       />
 
       <ui-field-error

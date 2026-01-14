@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-  import { toTypedSchema } from "@vee-validate/zod";
-  import { useForm } from "vee-validate";
-  import { AlertCircleIcon } from "lucide-vue-next";
+import { toTypedSchema } from "@vee-validate/zod";
+import { useForm } from "vee-validate";
+import { AlertCircleIcon } from "lucide-vue-next";
 
 // ----------------
 // ----- Data -----

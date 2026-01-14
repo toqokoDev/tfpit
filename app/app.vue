@@ -27,11 +27,7 @@ useHead({
         <nuxt-page />
       </nuxt-layout>
 
-      <ui-sonner
-        position="bottom-right"
-        close-button-position="top-right"
-        close-button
-      />
+      <ui-sonner position="bottom-right"/>
     </div>
   </Body>
 </template>

@@ -1,29 +1,27 @@
 <script lang="ts" setup>
 import { toTypedSchema } from "@vee-validate/zod";
+import { Mail } from "lucide-vue-next";
 import { useForm } from "vee-validate";
-
-type Role = 'model' | 'photographer';
+import { toast } from "vue-sonner";
 
 // ----------------
 // ----- Data -----
 // ----------------
 
 const supabase = useSupabaseClient();
-const route = useRoute();
-const queryRole = route.query.role as Role;
 
+const roles = ref<UserRoleSchema[]>([]);
+const isFetching = ref<boolean>(true);
 const isRegisterProcessing = ref<boolean>(false);
+const isConfirmDialogOpen = ref<boolean>(false);
 const registerErrorMessageKey = ref<string | null>(null);
 
-// ----------------
-// ----- Page -----
-// ----------------
-
-useHead({ title: 'Регистрация' });
-
-definePageMeta({
-  layout: 'blank'
-});
+const rolesOptions = computed(() => 
+  roles.value.map(role => ({
+    label: role.title,
+    value: role.id
+  }))
+);
 
 // -----------------
 // ----- Hooks -----
@@ -32,12 +30,16 @@ definePageMeta({
 const { handleSubmit } = useForm({
   validationSchema: toTypedSchema(registerSchema),
   initialValues: {
-    role: queryRole,
+    role: '',
     first_name: '',
     last_name: '',
     email: '',
     password: '',
   },
+});
+
+onMounted(() => {
+  getRoles();
 });
 
 // ---------------------
@@ -53,6 +55,7 @@ const register = handleSubmit(async (values) => {
       email: values.email,
       password: values.password,
       options: {
+        emailRedirectTo: `${window.location.origin}/auth/confirm`,
         data: {
           first_name: values.first_name,
           last_name: values.last_name,
@@ -61,19 +64,43 @@ const register = handleSubmit(async (values) => {
       }
     });
 
-    if (error) {
-      registerErrorMessageKey.value = error.message;
-      isRegisterProcessing.value = false;
-      return;
-    }
+    if (error) throw error;
 
-    isRegisterProcessing.value = false;
-    return navigateTo('/profile');
-  } catch (error) {
-    registerErrorMessageKey.value = 'errors.somethingWentWrong';
+    isConfirmDialogOpen.value = true;
+  } catch (error: any) {
+    registerErrorMessageKey.value = error.message || 'errors.somethingWentWrong';
+    toast.error('Ошибка при регистрации');
+  } finally {
     isRegisterProcessing.value = false;
   }
 });
+
+async function getRoles() {
+  try {
+    isFetching.value = true;
+    const { data, error } = await supabase
+      .from('roles')
+      .select('*');
+
+    if (error) throw error;
+    
+    roles.value = data as UserRoleSchema[];
+
+    console.log(roles);
+  } catch (error) {
+    console.error(error);
+    toast.error('Не удалось загрузить роли');
+  } finally {
+    isFetching.value = false;
+  }
+}
+
+// ----------------
+// ----- Page -----
+// ----------------
+
+useHead({ title: 'Регистрация' });
+definePageMeta({ layout: 'blank' });
 </script>
 
 <template>
@@ -84,7 +111,10 @@ const register = handleSubmit(async (values) => {
       </span>
       
       <div class="flex flex-1 items-center justify-center">
-        <form class="flex flex-col gap-6 w-full max-w-xs" @submit="register">
+        <div v-if="isFetching" class="flex justify-center">
+          <ui-spinner /> </div>
+
+        <form v-else class="flex flex-col gap-6 w-full max-w-xs" @submit="register">
           <ui-field-group>
             <div class="flex flex-col items-center gap-1 text-center">
               <h1 class="text-2xl font-bold">Создать аккаунт</h1>
@@ -112,10 +142,7 @@ const register = handleSubmit(async (values) => {
               name="role"
               label="Выберите роль"
               placeholder="Кто вы?"
-              :options="[
-                { label: 'Модель', value: 'model' },
-                { label: 'Фотограф', value: 'photographer' }
-              ]"
+              :options="rolesOptions"
             />
 
             <base-input
@@ -152,5 +179,33 @@ const register = handleSubmit(async (values) => {
         </form>
       </div>
     </div>
+
+    <ui-dialog :open="isConfirmDialogOpen" @update:open="isConfirmDialogOpen = $event">
+      <ui-dialog-content class="sm:max-w-md">
+        <ui-dialog-header>
+          <ui-dialog-title>Проверьте почту</ui-dialog-title>
+          <ui-dialog-description>
+            Мы отправили письмо со ссылкой для подтверждения на ваш адрес.
+          </ui-dialog-description>
+        </ui-dialog-header>
+        
+        <div class="flex flex-col items-center justify-center py-4">
+          <div class="bg-primary/10 p-3 rounded-full mb-4">
+            <mail class="h-10 w-10 text-primary" />
+          </div>
+          <p class="text-sm text-center text-muted-foreground">
+            Пожалуйста, перейдите по ссылке в письме, чтобы завершить регистрацию и войти в аккаунт.
+          </p>
+        </div>
+
+        <ui-dialog-footer>
+          <nuxt-link to="/" as-child>
+            <ui-button type="button" variant="secondary">
+              Хорошо
+            </ui-button>
+          </nuxt-link>
+        </ui-dialog-footer>
+      </ui-dialog-content>
+    </ui-dialog>
   </div>
 </template>

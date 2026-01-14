@@ -71,19 +71,6 @@ function toggleColor() {
         }"
       />
     </main>
-
-    <footer class="border-t py-12 bg-muted/30">
-      <div class="container mx-auto px-4">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-muted-foreground">
-          <p>© 2026 TFP.BY Платформа для творческого взаимодействия.</p>
-          <div class="flex gap-6">
-            <a href="#" class="hover:underline">Правила</a>
-            <a href="#" class="hover:underline">Помощь</a>
-            <a href="#" class="hover:underline">Контакты</a>
-          </div>
-        </div>
-      </div>
-    </footer>
   </div>
 </template>
 

@@ -39,38 +39,88 @@ export type Database = {
   }
   public: {
     Tables: {
+      roles: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           avatar_url: string | null
           bio: string | null
+          birth_date: string | null
+          city: string | null
+          cover_url: string | null
           created_at: string
+          email: string
           first_name: string
+          gender: string | null
           id: string
           last_name: string
+          phone: string | null
           portfolio_links: Json | null
           role: string
+          updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
+          city?: string | null
+          cover_url?: string | null
           created_at?: string
+          email: string
           first_name?: string
+          gender?: string | null
           id?: string
           last_name?: string
+          phone?: string | null
           portfolio_links?: Json | null
           role?: string
+          updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          birth_date?: string | null
+          city?: string | null
+          cover_url?: string | null
           created_at?: string
+          email?: string
           first_name?: string
+          gender?: string | null
           id?: string
           last_name?: string
+          phone?: string | null
           portfolio_links?: Json | null
           role?: string
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "users_role_fkey"
+            columns: ["role"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

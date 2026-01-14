@@ -49,10 +49,17 @@ export default defineNuxtConfig({
 
   modules: [
     'shadcn-nuxt',
+    '@pinia/nuxt',
     '@nuxtjs/supabase',
     '@nuxtjs/tailwindcss',
     '@nuxtjs/color-mode'
   ],
+
+  pinia: {
+    storesDirs: [
+      './app/stores/**',
+    ],
+  },
 
   colorMode: {
     classSuffix: ''
@@ -66,5 +73,9 @@ export default defineNuxtConfig({
   supabase: {
     types: './shared/types/supabase.ts',
     redirect: false,
+    cookieOptions: {
+      maxAge: 60 * 60 * 8,
+      sameSite: 'lax',
+    }
   }
 });
