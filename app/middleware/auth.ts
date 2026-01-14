@@ -1,6 +1,6 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   // Check if user is already exist
-
+  
   const currentUserStore = useCurrentUserStore();
 
   if (currentUserStore.isExist()) {
@@ -42,6 +42,21 @@ export default defineNuxtRouteMiddleware(async (to) => {
     .limit(1)
     .maybeSingle();
 
+  const { data: portfolio, error: portfolioFetchError } = await supabase
+    .from('portfolios')
+    .select(`
+      id,
+      image_url,
+      category,
+      description,
+      is_public,
+      likes_count,
+      views_count,
+      created_at,
+      updated_at
+    `)
+    .eq('user_id', authUser.id);
+
   if (userFetchError) {
     throw createSomethingWentWrongError();
   }
@@ -58,6 +73,18 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   const userRole = user.role!;
+
+  const portfolioItems = (portfolio || []).map(item => ({
+    id: item.id,
+    image_url: item.image_url ? [item.image_url] : [],
+    category: item.category,
+    description: item.description,
+    is_public: item.is_public,
+    likes_count: item.likes_count,
+    views_count: item.views_count,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  }));
 
   currentUserStore.setUser({
     id: user.id,
@@ -76,6 +103,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
       title: userRole.title,
       description: userRole.description,
     },
+    portfolio: portfolioItems,
     created_at: user.created_at,
     updated_at: user.updated_at,
   });

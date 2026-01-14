@@ -7,7 +7,7 @@ import { AlertCircleIcon } from "lucide-vue-next";
 // ----- Data -----
 // ----------------
 
-const supabase = useSupabaseClient();
+const supabase = useSupabaseClient<Database>();
 
 const isLoginProcessing = ref<boolean>(false);
 const loginErrorMessageKey = ref<string | null>(null);

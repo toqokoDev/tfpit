@@ -1,4 +1,5 @@
 import * as zod from "zod";
+import { portfolioSchema } from "./portfolio";
 
 // -------------------------
 // ----- User Role ---------
@@ -49,6 +50,7 @@ export const userSchema = zod
     cover_url: zod.string().url().optional(),
 
     role: userRoleSchema.optional(),
+    portfolio: zod.array(portfolioSchema),
 
     created_at: zod.string(),
     updated_at: zod.string(),

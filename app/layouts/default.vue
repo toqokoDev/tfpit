@@ -2,11 +2,33 @@
 import { SunDim, MoonStar, UserCircle2 } from "lucide-vue-next";
 
 const colorMode = useColorMode();
-const user = useSupabaseUser();
 
 function toggleColor() {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark';
 }
+
+const supabase = useSupabaseClient<Database>();
+const { data: { user: authUser } } = await supabase.auth.getUser();
+
+const { data: currentUser } = await useAsyncData('current-user', async () => {
+  if (!authUser) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('email, first_name, last_name, avatar_url')
+    .eq('id', authUser.id)
+    .single();
+
+  if (error) {
+    console.error('Ошибка при получении профиля:', error);
+    return null;
+  }
+  
+  return data;
+});
+
 </script>
 
 <template>
@@ -42,13 +64,8 @@ function toggleColor() {
 
           <div class="h-6 w-[1px] bg-border mx-1 hidden sm:block"></div>
 
-          <template v-if="user">
-            <NuxtLink to="/profile">
-              <ui-button variant="outline" size="sm" class="font-semibold">
-                <user-circle2 class="size-4" />
-                <span>Профиль</span>
-              </ui-button>
-            </NuxtLink>
+          <template v-if="currentUser">
+            <base-profile :user="currentUser"/>
           </template>
 
           <template v-else>

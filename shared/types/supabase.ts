@@ -39,6 +39,350 @@ export type Database = {
   }
   public: {
     Tables: {
+      announcement_responses: {
+        Row: {
+          announcement_id: string
+          created_at: string | null
+          id: string
+          message: string
+          role_id: string
+          updated_at: string | null
+          user_id: string
+          user_profile_id: string
+        }
+        Insert: {
+          announcement_id: string
+          created_at?: string | null
+          id?: string
+          message: string
+          role_id: string
+          updated_at?: string | null
+          user_id: string
+          user_profile_id: string
+        }
+        Update: {
+          announcement_id?: string
+          created_at?: string | null
+          id?: string
+          message?: string
+          role_id?: string
+          updated_at?: string | null
+          user_id?: string
+          user_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_responses_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_responses_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_responses_user_profile_id_fkey"
+            columns: ["user_profile_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcements: {
+        Row: {
+          additional_requirements: string[] | null
+          city: string
+          created_at: string | null
+          description: string
+          experience_level: string | null
+          gender_preference: string | null
+          id: string
+          location_name: string | null
+          references_urls: string[] | null
+          responses_count: number | null
+          role_id: string
+          shooting_date: string | null
+          shooting_date_type: string
+          shooting_genre_id: string | null
+          status: string
+          title: string
+          updated_at: string | null
+          user_id: string
+          views_count: number | null
+        }
+        Insert: {
+          additional_requirements?: string[] | null
+          city: string
+          created_at?: string | null
+          description: string
+          experience_level?: string | null
+          gender_preference?: string | null
+          id?: string
+          location_name?: string | null
+          references_urls?: string[] | null
+          responses_count?: number | null
+          role_id: string
+          shooting_date?: string | null
+          shooting_date_type?: string
+          shooting_genre_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+          views_count?: number | null
+        }
+        Update: {
+          additional_requirements?: string[] | null
+          city?: string
+          created_at?: string | null
+          description?: string
+          experience_level?: string | null
+          gender_preference?: string | null
+          id?: string
+          location_name?: string | null
+          references_urls?: string[] | null
+          responses_count?: number | null
+          role_id?: string
+          shooting_date?: string | null
+          shooting_date_type?: string
+          shooting_genre_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcements_shooting_genre_id_fkey"
+            columns: ["shooting_genre_id"]
+            isOneToOne: false
+            referencedRelation: "shooting_genres"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hairdressers: {
+        Row: {
+          additional_info: string[] | null
+          created_at: string | null
+          equipment: string[] | null
+          id: string
+          specialties: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          additional_info?: string[] | null
+          created_at?: string | null
+          equipment?: string[] | null
+          id?: string
+          specialties?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          additional_info?: string[] | null
+          created_at?: string | null
+          equipment?: string[] | null
+          id?: string
+          specialties?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hairdressers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      models: {
+        Row: {
+          additional_info: string[] | null
+          bust: number
+          clothing_sizes: string[]
+          created_at: string | null
+          eye_color: string
+          hair_color: string
+          hair_length: string
+          has_piercings: boolean | null
+          has_scars: boolean | null
+          has_tattoos: boolean | null
+          height: number
+          hips: number
+          id: string
+          shoe_size: number
+          updated_at: string | null
+          user_id: string
+          waist: number
+          weight: number
+        }
+        Insert: {
+          additional_info?: string[] | null
+          bust: number
+          clothing_sizes?: string[]
+          created_at?: string | null
+          eye_color: string
+          hair_color: string
+          hair_length: string
+          has_piercings?: boolean | null
+          has_scars?: boolean | null
+          has_tattoos?: boolean | null
+          height: number
+          hips: number
+          id?: string
+          shoe_size: number
+          updated_at?: string | null
+          user_id: string
+          waist: number
+          weight: number
+        }
+        Update: {
+          additional_info?: string[] | null
+          bust?: number
+          clothing_sizes?: string[]
+          created_at?: string | null
+          eye_color?: string
+          hair_color?: string
+          hair_length?: string
+          has_piercings?: boolean | null
+          has_scars?: boolean | null
+          has_tattoos?: boolean | null
+          height?: number
+          hips?: number
+          id?: string
+          shoe_size?: number
+          updated_at?: string | null
+          user_id?: string
+          waist?: number
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "models_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photographers: {
+        Row: {
+          additional_info: string[] | null
+          camera: string
+          created_at: string | null
+          id: string
+          lenses: string[]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          additional_info?: string[] | null
+          camera: string
+          created_at?: string | null
+          id?: string
+          lenses?: string[]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          additional_info?: string[] | null
+          camera?: string
+          created_at?: string | null
+          id?: string
+          lenses?: string[]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photographers_user_id_fkey1"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolios: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          image_url: string
+          is_public: boolean
+          likes_count: number
+          updated_at: string
+          user_id: string
+          views_count: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          image_url: string
+          is_public?: boolean
+          likes_count?: number
+          updated_at?: string
+          user_id: string
+          views_count?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          image_url?: string
+          is_public?: boolean
+          likes_count?: number
+          updated_at?: string
+          user_id?: string
+          views_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolios_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roles: {
         Row: {
           created_at: string
@@ -59,6 +403,65 @@ export type Database = {
           title?: string
         }
         Relationships: []
+      }
+      shooting_genres: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      stylists: {
+        Row: {
+          additional_info: string[] | null
+          created_at: string | null
+          id: string
+          skills: string[] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          additional_info?: string[] | null
+          created_at?: string | null
+          id?: string
+          skills?: string[] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          additional_info?: string[] | null
+          created_at?: string | null
+          id?: string
+          skills?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stylists_user_id_fkey1"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {

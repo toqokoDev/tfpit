@@ -8,7 +8,7 @@ import { toast } from "vue-sonner";
 // ----- Data -----
 // ----------------
 
-const supabase = useSupabaseClient();
+const supabase = useSupabaseClient<Database>();
 
 const roles = ref<UserRoleSchema[]>([]);
 const isFetching = ref<boolean>(true);
