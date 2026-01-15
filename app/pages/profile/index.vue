@@ -27,7 +27,7 @@ useHead({ title: 'Профиль' });
                 Профиль
               </ui-tabs-trigger>
               <ui-tabs-trigger 
-                value="account" 
+                value="additionally" 
                 class="flex-1 md:flex-none justify-center md:justify-start px-2 md:px-4 py-2 text-sm md:text-base min-w-0"
               >
                 Дополнительно
@@ -41,8 +41,8 @@ useHead({ title: 'Профиль' });
             <profile :active-tab="activeTab" />
           </ui-tabs-content>
 
-          <ui-tabs-content value="account" class="mt-0 border-none p-0 outline-none">
-            <profile-account />
+          <ui-tabs-content value="additionally" class="mt-0 border-none p-0 outline-none">
+            <profile-additionally />
           </ui-tabs-content>
         </div>
         

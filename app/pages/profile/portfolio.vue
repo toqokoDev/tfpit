@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { Plus, Eye, Heart, Globe, Lock, Upload, ChevronLeft, ChevronRight, Pencil, Trash2, AlertTriangle } from 'lucide-vue-next';
 import { toTypedSchema } from "@vee-validate/zod";
-import { useForm, Form as VeeForm } from "vee-validate";
+import { Form as VeeForm } from "vee-validate";
 import { Field as VeeField } from "vee-validate";
 import { toast } from "vue-sonner";
 
