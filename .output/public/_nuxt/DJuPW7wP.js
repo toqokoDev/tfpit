@@ -1,0 +1,1 @@
+import{e,f as o,o as c,n as r,g as s,h as t,a4 as i}from"./DZ62IjT-.js";const l=e({__name:"Spinner",props:{class:{}},setup(a){const n=a;return(p,_)=>(c(),o(s(i),{role:"status","aria-label":"Loading",class:r(s(t)("size-4 animate-spin",n.class))},null,8,["class"]))}}),u=Object.assign(l,{__name:"UiSpinner"});export{u as _};

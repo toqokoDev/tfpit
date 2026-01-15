@@ -1,0 +1,1 @@
+import{c as o,o as t,b as c,a7 as n}from"./DZ62IjT-.js";import{_}from"./DlAUqK2U.js";const s={},a={class:"size-full"};function r(f,l){const e=n;return t(),o("div",a,[c(e)])}const i=_(s,[["render",r]]);export{i as default};

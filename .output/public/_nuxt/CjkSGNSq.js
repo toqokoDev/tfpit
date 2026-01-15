@@ -1,0 +1,1 @@
+import{e,u as t,c as n,o}from"./DZ62IjT-.js";const s={class:"min-h-screen bg-background text-foreground"},d=e({__name:"index",setup(a){return t({title:"Предложения"}),(c,r)=>(o(),n("div",s))}});export{d as default};

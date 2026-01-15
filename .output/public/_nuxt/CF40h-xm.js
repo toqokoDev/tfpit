@@ -1,0 +1,1 @@
+import{e as o,c as r,r as n,n as t,g as c,o as l,h as d}from"./DZ62IjT-.js";const p=o({__name:"Card",props:{class:{}},setup(s){const a=s;return(e,_)=>(l(),r("div",{"data-slot":"card",class:t(c(d)("bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",a.class))},[n(e.$slots,"default")],2))}}),f=Object.assign(p,{__name:"UiCard"});export{f as _};
