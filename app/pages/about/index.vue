@@ -82,7 +82,9 @@ useHead({ title: 'О сервисе' });
         <h2 class="mb-4 text-3xl font-bold md:text-4xl">Готовы создать что-то великое?</h2>
         <p class="mb-8 text-slate-400">Присоединяйтесь к нашему комьюнити и начните собирать портфолио мечты.</p>
         <div class="flex flex-col justify-center gap-4 sm:flex-row">
-          <ui-button size="lg" variant="default" class="bg-white text-black hover:bg-slate-200">Создать аккаунт</ui-button>
+          <NuxtLink to="/auth/register" as-child>
+            <ui-button size="lg" variant="default" class="bg-white text-black hover:bg-slate-200">Создать аккаунт</ui-button>
+          </NuxtLink>
         </div>
       </div>
     </section>

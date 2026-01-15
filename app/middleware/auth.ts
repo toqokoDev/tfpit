@@ -76,7 +76,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const portfolioItems = (portfolio || []).map(item => ({
     id: item.id,
-    image_url: item.image_url ? [item.image_url] : [],
+    image_url: item.image_url ? item.image_url.split('|').filter((url: string) => url.trim()) : [],
     category: item.category,
     description: item.description,
     is_public: item.is_public,

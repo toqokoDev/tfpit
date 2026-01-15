@@ -2,7 +2,6 @@
 const activeTab = ref('profile');
 
 definePageMeta({
-  // layout: 'profile',
   middleware: 'auth',
 });
 useHead({ title: 'Профиль' });

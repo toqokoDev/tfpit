@@ -50,10 +50,10 @@ export const userSchema = zod
     cover_url: zod.string().url().optional(),
 
     role: userRoleSchema.optional(),
-    portfolio: zod.array(portfolioSchema),
+    portfolio: zod.array(portfolioSchema).optional(),
 
-    created_at: zod.string(),
-    updated_at: zod.string(),
+    created_at: zod.string().optional(),
+    updated_at: zod.string().optional(),
   })
   .strict();
 

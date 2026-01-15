@@ -161,7 +161,7 @@ const uploadFile = async (
     isLoading.value = true;
 
     const fileExt = file.name.split('.').pop();
-    const filePath = `${currentUser.value.id}.${fileExt}`;
+    const filePath = `${currentUser.value.id}-${Date.now().toString()}.${fileExt}`;
 
     const uploadOptions = cacheControl 
       ? { upsert: true, cacheControl } 

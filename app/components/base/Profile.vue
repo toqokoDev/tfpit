@@ -37,7 +37,7 @@ async function handleLogout() {
         
         <div class="hidden sm:flex flex-col text-left mr-1">
           <span class="text-sm font-semibold leading-none">
-            {{ user.first_name || 'Профиль' }}
+            {{ user.first_name || 'Профиль' }}  {{ user.last_name }}
           </span>
         </div>
       </div>
@@ -54,7 +54,7 @@ async function handleLogout() {
             <ui-avatar-fallback>{{ initials }}</ui-avatar-fallback>
           </ui-avatar>
           <div class="grid flex-1 text-left text-sm leading-tight">
-            <span class="truncate font-medium">{{ user.first_name }}</span>
+            <span class="truncate font-medium">{{ user.first_name }} {{ user.last_name }}</span>
           </div>
         </div>
       </ui-dropdown-menu-label>

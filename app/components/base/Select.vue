@@ -20,7 +20,7 @@ function getErrors(errors: string[]): string[] {
 </script>
 
 <template>
-  <vee-field :name="name" v-slot="{ field, errors, setValue }">
+  <vee-field :name="name" v-slot="{ field, errors, setValue, setTouched }">
     <ui-field :data-invalid="!!errors.length">
       <ui-field-label :for="name">
         {{ label }}
@@ -28,8 +28,14 @@ function getErrors(errors: string[]): string[] {
 
       <ui-select
         :id="name"
-        :model-value="field.value"
-        @update:model-value="setValue"
+        :model-value="field.value || ''"
+        @update:model-value="(value: any) => {
+          const stringValue = value !== undefined && value !== null ? String(value) : '';
+          if (stringValue) {
+            setValue(stringValue);
+            setTouched(true);
+          }
+        }"
       >
         <ui-select-trigger :aria-invalid="!!errors.length">
           <ui-select-value :placeholder="placeholder" />
