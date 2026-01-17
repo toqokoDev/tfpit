@@ -780,61 +780,34 @@ useHead({ title: 'Портфолио' });
         </ui-dialog-header>
         
         <div v-if="selectedPortfolio" class="py-4">
+          <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-2">
+            <chevron-left class="w-4 h-4" />
+            <span>Листайте свайпом</span>
+            <chevron-right class="w-4 h-4" />
+          </div>
           <div v-if="selectedPortfolio.image_url && selectedPortfolio.image_url.length > 0" class="mb-6 flex justify-center">
-            <div class="relative aspect-[3/4] w-full max-w-xs overflow-hidden rounded-lg bg-muted">
-              <img
-                :src="selectedPortfolio.image_url[currentImageIndex]"
-                :alt="`${selectedPortfolio.category} - ${currentImageIndex + 1}`"
-                class="h-full w-full object-cover transition-opacity duration-300"
-                loading="lazy"
-              />
-              
-              <ui-button
-                v-if="selectedPortfolio.image_url.length > 1"
-                @click="prevImage"
-                type="button"
-                class="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm p-2 text-foreground shadow-lg transition-all hover:bg-background/90 disabled:opacity-50"
-                :disabled="selectedPortfolio.image_url.length <= 1"
-              >
-                <ChevronLeft class="h-5 w-5" />
-              </ui-button>
-              
-              <ui-button
-                v-if="selectedPortfolio.image_url.length > 1"
-                @click="nextImage"
-                type="button"
-                class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm p-2 text-foreground shadow-lg transition-all hover:bg-background/90 disabled:opacity-50"
-                :disabled="selectedPortfolio.image_url.length <= 1"
-              >
-                <ChevronRight class="h-5 w-5" />
-              </ui-button>
-              
-              <div
-                v-if="selectedPortfolio.image_url.length > 1"
-                class="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-background/80 backdrop-blur-sm px-3 py-1 text-xs font-medium"
-              >
-                {{ currentImageIndex + 1 }} / {{ selectedPortfolio.image_url.length }}
-              </div>
-              
-              <div
-                v-if="selectedPortfolio.image_url.length > 1"
-                class="absolute bottom-2 right-2 flex gap-1"
-              >
-                <ui-button
-                  v-for="(image, index) in selectedPortfolio.image_url"
-                  :key="index"
-                  @click="currentImageIndex = index"
-                  type="button"
-                  :class="[
-                    'h-2 w-2 rounded-full transition-all',
-                    index === currentImageIndex
-                      ? 'bg-primary w-6'
-                      : 'bg-background/60 hover:bg-background/80'
-                  ]"
-                  :aria-label="`Перейти к изображению ${index + 1}`"
-                />
-              </div>
-            </div>
+            <ui-carousel class="relative w-full max-w-2xl mx-auto"
+              :opts="{
+                align: 'start',
+              }"
+            >
+              <ui-carousel-content>
+                <ui-carousel-item 
+                  v-for="img in selectedPortfolio.image_url" 
+                  :key="img" 
+                  class="basis-full"
+                >
+                  <div class="p-1 flex justify-center">
+                    <img
+                      :src="img"
+                      :alt="selectedPortfolio.category"
+                      class="h-auto object-contain rounded-lg transition-opacity duration-300 max-w-full"
+                      loading="lazy"
+                    />
+                  </div>
+                </ui-carousel-item>
+              </ui-carousel-content>
+            </ui-carousel>
           </div>
 
           <div class="flex flex-wrap gap-4 text-sm text-muted-foreground">
@@ -959,7 +932,6 @@ useHead({ title: 'Портфолио' });
                     </div>
                   </div>
 
-                  <!-- New Image Previews -->
                   <div v-if="previewImageUrls.length > 0" class="grid grid-cols-4 gap-2">
                     <div
                       v-for="(preview, index) in previewImageUrls"

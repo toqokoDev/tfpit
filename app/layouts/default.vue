@@ -8,16 +8,12 @@ function toggleColor() {
 }
 
 const currentUserStore = useCurrentUserStore();
-// Всегда показываем скелетон, чтобы успела загрузиться иконка
 const isDataloading = ref(true);
 
 const { data: loadedUser } = await useAsyncData('init-user', async () => {
   if (currentUserStore.isExist()) {
-    // Небольшая задержка, чтобы успела загрузиться иконка
-    await nextTick();
-    setTimeout(() => {
-      isDataloading.value = false;
-    }, 100);
+    await sleep(150);
+    isDataloading.value = false;
     return null;
   }
 
@@ -25,10 +21,8 @@ const { data: loadedUser } = await useAsyncData('init-user', async () => {
   const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
 
   if (authError || authUser === null) {
-    await nextTick();
-    setTimeout(() => {
-      isDataloading.value = false;
-    }, 100);
+    await sleep(150);
+    isDataloading.value = false;
     return null;
   }
 
@@ -40,17 +34,13 @@ const { data: loadedUser } = await useAsyncData('init-user', async () => {
     .maybeSingle();
 
   if (userFetchError || user === null) {
-    await nextTick();
-    setTimeout(() => {
-      isDataloading.value = false;
-    }, 100);
+    await sleep(150);
+    isDataloading.value = false;
     return null;
   }
 
-  await nextTick();
-  setTimeout(() => {
-    isDataloading.value = false;
-  }, 100);
+  await sleep(150);
+  isDataloading.value = false;
 
   return {
     email: user.email,

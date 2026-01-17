@@ -3,6 +3,10 @@ import { toast } from "vue-sonner";
 import { useForm, Field as VeeField } from "vee-validate";
 import { AlertCircleIcon, Star, Link as LinkIcon, Share2 } from 'lucide-vue-next';
 
+// ----------------
+// ----- Data -----
+// ----------------
+
 const props = defineProps<{
   activeTab?: string;
 }>();
@@ -15,14 +19,6 @@ const isUpdateProcessing = ref(false);
 const updateErrorMessage = ref<string | null>(null);
 const ratingValue = computed(() => currentUser.value.rating || 0);
 
-const shareProfile = async () => {
-  const profileUrl = `/profile/user/${currentUser.value.id}`;
-  const fullUrl = window.location.origin + profileUrl;
-  
-  await navigator.clipboard.writeText(fullUrl);
-  toast.success('Ссылка скопирована в буфер обмена');
-};
-
 const { handleSubmit, setValues } = useForm({
   keepValuesOnUnmount: true,
   initialValues: {
@@ -34,6 +30,20 @@ const { handleSubmit, setValues } = useForm({
     social_website: currentUser.value.socials.website || '',
   },
 });
+
+onMounted(() => {
+  refreshFormData();
+});
+
+watch(() => props.activeTab, (newTab) => {
+  if (newTab === 'information') {
+    refreshFormData();
+  }
+});
+
+// ---------------------
+// ----- Functions -----
+// ---------------------
 
 const refreshFormData = () => {
   const user = currentUserStore.getUser();
@@ -49,15 +59,13 @@ const refreshFormData = () => {
   });
 };
 
-onMounted(() => {
-  refreshFormData();
-});
-
-watch(() => props.activeTab, (newTab) => {
-  if (newTab === 'information') {
-    refreshFormData();
-  }
-});
+const shareProfile = async () => {
+  const profileUrl = `/profile/user/${currentUser.value.id}`;
+  const fullUrl = window.location.origin + profileUrl;
+  
+  await navigator.clipboard.writeText(fullUrl);
+  toast.success('Ссылка скопирована в буфер обмена');
+};
 
 const informationUpdate = handleSubmit(async (values) => {
   try {
@@ -107,19 +115,17 @@ const informationUpdate = handleSubmit(async (values) => {
 
 <template>
   <div class="space-y-6">
-    <!-- Рейтинг -->
-    <div class="flex flex-col items-center justify-center gap-2">
-      <div class="flex items-center gap-2">
-        <star class="h-6 w-6" />
-        <span class="text-2xl font-semibold">{{ ratingValue }}</span>
+    <div class="flex items-center justify-center gap-4">
+      <div class="flex flex-col items-center gap-2">
+        <div class="flex items-center gap-2">
+          <star class="h-6 w-6" />
+          <span class="text-2xl font-semibold">{{ ratingValue }}</span>
+        </div>
+        <p class="text-sm text-muted-foreground text-center">
+          Рейтинг пользователя
+        </p>
       </div>
-      <p class="text-sm text-muted-foreground text-center">
-        Рейтинг пользователя
-      </p>
-    </div>
 
-    <!-- Кнопка поделиться профилем -->
-    <div class="flex justify-center">
       <ui-button
         variant="outline"
         @click="shareProfile"
@@ -153,7 +159,7 @@ const informationUpdate = handleSubmit(async (values) => {
         <vee-field name="experience_level" v-slot="{ field, errors, setValue }">
           <ui-field :data-invalid="!!errors.length">
             <ui-field-label>
-              {{ field.value < 3 ? 'Не опытный' : field.value >= 3 && field.value < 10 ? 'Любитель' : 'Профессионал' }}
+              {{ field.value < 3 ? 'Начинающий' : field.value >= 3 && field.value < 10 ? 'Любитель' : 'Профессионал' }}
             </ui-field-label>
             <div class="mt-2">
               <ui-slider
@@ -174,36 +180,33 @@ const informationUpdate = handleSubmit(async (values) => {
           </ui-field>
         </vee-field>
 
-        <div class="space-y-4">
-          <ui-field-label class="flex items-center gap-2">
-            <link-icon class="h-4 w-4" />
-            Социальные сети
-          </ui-field-label>
-          
-          <base-input 
-            name="social_instagram"
-            type="url"
-            label="Instagram"
-            placeholder="https://instagram.com/username"
-          />
-          <base-input 
-            name="social_vk"
-            type="url"
-            label="ВКонтакте"
-            placeholder="https://vk.com/username"
-          />
-          <base-input 
-            name="social_telegram"
-            type="url"
-            label="Telegram"
-            placeholder="https://t.me/username"
-          />
-          <base-input 
-            name="social_website"
-            type="url"
-            label="Веб-сайт"
-            placeholder="https://example.com"
-          />
+        <div class="space-y-2">          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <base-input 
+              name="social_instagram"
+              type="url"
+              label="Instagram"
+              placeholder="https://instagram.com/username"
+            />
+            <base-input 
+              name="social_vk"
+              type="url"
+              label="ВКонтакте"
+              placeholder="https://vk.com/username"
+            />
+            <base-input 
+              name="social_telegram"
+              type="url"
+              label="Telegram"
+              placeholder="https://t.me/username"
+            />
+            <base-input 
+              name="social_website"
+              type="url"
+              label="Веб-сайт"
+              placeholder="https://example.com"
+            />
+          </div>
         </div>
 
         <ui-field>

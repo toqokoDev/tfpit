@@ -2,6 +2,12 @@
 import { Eye, Heart, Globe, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-vue-next';
 import { toast } from "vue-sonner";
 
+interface UserInfo {
+  id: string;
+  first_name: string; 
+  last_name: string; 
+  avatar_url: string | null;
+}
 // ----------------
 // ----- Data -----
 // ----------------
@@ -13,8 +19,7 @@ const portfolioId = route.params.id as string;
 
 const portfolio = ref<PortfolioSchema | null>(null);
 const isLoading = ref(true);
-const currentImageIndex = ref(0);
-const userInfo = ref<{ first_name: string; last_name: string; avatar_url: string | null } | null>(null);
+const userInfo = ref<UserInfo | null>(null);
 
 // ---------------------
 // ----- Functions -----
@@ -66,12 +71,13 @@ async function loadPortfolio() {
     
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('first_name, last_name, avatar_url')
+      .select('id, first_name, last_name, avatar_url')
       .eq('id', portfolioData.user_id)
       .single();
     
     if (!userError && userData) {
       userInfo.value = {
+        id: userData.id,
         first_name: userData.first_name || '',
         last_name: userData.last_name || '',
         avatar_url: userData.avatar_url,
@@ -91,19 +97,6 @@ async function loadPortfolio() {
   }
 }
 
-function nextImage() {
-  if (portfolio.value && portfolio.value.image_url) {
-    currentImageIndex.value = (currentImageIndex.value + 1) % portfolio.value.image_url.length;
-  }
-}
-
-function prevImage() {
-  if (portfolio.value && portfolio.value.image_url) {
-    const length = portfolio.value.image_url.length;
-    currentImageIndex.value = (currentImageIndex.value - 1 + length) % length;
-  }
-}
-
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleDateString('ru-RU', {
@@ -114,30 +107,10 @@ function formatDate(dateString: string): string {
 }
 
 async function sharePortfolio() {
-  const url = window.location.href;
+  const fullUrl = window.location.href;
   
-  await copyToClipboard(url);
-}
-
-async function copyToClipboard(text: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-    toast.success('Ссылка скопирована в буфер обмена');
-  } catch (error) {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    textArea.style.position = 'fixed';
-    textArea.style.opacity = '0';
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      toast.success('Ссылка скопирована в буфер обмена');
-    } catch (err) {
-      toast.error('Не удалось скопировать ссылку');
-    }
-    document.body.removeChild(textArea);
-  }
+  await navigator.clipboard.writeText(fullUrl);
+  toast.success('Ссылка скопирована в буфер обмена');
 }
 
 onMounted(async () => {
@@ -205,16 +178,21 @@ useHead({
 
       <div class="space-y-6">
         <div v-if="userInfo" class="flex items-center gap-4 pb-4 border-b">
-          <div v-if="userInfo.avatar_url" class="w-12 h-12 rounded-full overflow-hidden">
-            <img :src="userInfo.avatar_url" :alt="`${userInfo.first_name} ${userInfo.last_name}`" class="w-full h-full object-cover" />
-          </div>
-          <div v-else class="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-            <span class="text-lg font-medium">{{ (userInfo.first_name?.[0] || '') + (userInfo.last_name?.[0] || '') }}</span>
-          </div>
-          <div>
-            <p class="font-medium">{{ userInfo.first_name }} {{ userInfo.last_name }}</p>
-            <p class="text-sm text-muted-foreground">Автор портфолио</p>
-          </div>
+          <NuxtLink 
+            :to="`/profile/user/${userInfo.id}`"
+            class="flex items-center gap-4 hover:opacity-80 transition-opacity"
+          >
+            <div v-if="userInfo.avatar_url" class="w-12 h-12 rounded-full overflow-hidden">
+              <img :src="userInfo.avatar_url" :alt="`${userInfo.first_name} ${userInfo.last_name}`" class="w-full h-full object-cover" />
+            </div>
+            <div v-else class="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+              <span class="text-lg font-medium">{{ (userInfo.first_name?.[0] || '') + (userInfo.last_name?.[0] || '') }}</span>
+            </div>
+            <div>
+              <p class="font-medium">{{ userInfo.first_name }} {{ userInfo.last_name }}</p>
+              <p class="text-sm text-muted-foreground">Автор портфолио</p>
+            </div>
+          </NuxtLink>
         </div>
 
         <div>
@@ -223,6 +201,12 @@ useHead({
         </div>
 
         <div v-if="portfolio.image_url && portfolio.image_url.length > 0" class="space-y-4">
+          <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <chevron-left class="w-4 h-4" />
+            <span>Листайте свайпом</span>
+            <chevron-right class="w-4 h-4" />
+          </div>
+
           <ui-carousel class="relative w-full max-w-2xl mx-auto"
             :opts="{
               align: 'center',

@@ -409,22 +409,22 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
-          name: string
           slug: string
+          title: string
         }
         Insert: {
           created_at?: string | null
           description?: string | null
           id?: string
-          name: string
           slug: string
+          title: string
         }
         Update: {
           created_at?: string | null
           description?: string | null
           id?: string
-          name?: string
           slug?: string
+          title?: string
         }
         Relationships: []
       }
@@ -434,7 +434,7 @@ export type Database = {
           id: string
           instagram: string | null
           telegram: string | null
-          update_at: string
+          updated_at: string
           user_id: string
           vk: string | null
           website: string | null
@@ -444,7 +444,7 @@ export type Database = {
           id?: string
           instagram?: string | null
           telegram?: string | null
-          update_at?: string
+          updated_at?: string
           user_id?: string
           vk?: string | null
           website?: string | null
@@ -454,7 +454,7 @@ export type Database = {
           id?: string
           instagram?: string | null
           telegram?: string | null
-          update_at?: string
+          updated_at?: string
           user_id?: string
           vk?: string | null
           website?: string | null

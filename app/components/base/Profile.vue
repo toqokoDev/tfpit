@@ -30,7 +30,7 @@ async function handleLogout() {
   <ui-dropdown-menu>
     <ui-dropdown-menu-trigger as-child>
       <div class="flex items-center gap-2 p-1 rounded-lg hover:bg-accent cursor-pointer transition-colors duration-200 select-none">
-        <ui-avatar class="h-8 w-8 rounded-full border">
+        <ui-avatar class="h-8 w-8 rounded-full">
           <ui-avatar-image :src="user.avatar_url || ''" />
           <ui-avatar-fallback class="text-xs">{{ initials }}</ui-avatar-fallback>
         </ui-avatar>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Star, BriefcaseBusiness, Link as LinkIcon } from 'lucide-vue-next';
+import { Star, BriefcaseBusiness, Link as LinkIcon, ChevronLeft, ChevronRight, Globe, Send, Instagram, MessageCircle } from 'lucide-vue-next';
 
 const route = useRoute();
 const router = useRouter();
@@ -27,7 +27,7 @@ const hasSocials = computed(() => {
 });
 
 const getExperienceLevel = (level: number) => {
-  if (level < 3) return 'Не опытный';
+  if (level < 3) return 'Начинающий';
   if (level >= 3 && level < 10) return 'Любитель';
   return 'Профессионал';
 };
@@ -199,64 +199,72 @@ onMounted(async () => {
           </ui-tabs-list>
 
           <ui-tabs-content value="profile" class="space-y-6">
-            <div v-if="user.bio" class="space-y-2">
-              <h3 class="text-sm font-semibold">О себе</h3>
-              <p class="text-sm text-muted-foreground whitespace-pre-wrap">{{ user.bio }}</p>
-            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-6">
+                <div class="space-y-4 text-sm">
+                  <div v-if="user.phone">
+                    <p class="text-muted-foreground mb-1">Телефон</p>
+                    <p class="font-medium">{{ user.phone }}</p>
+                  </div>
+                  <div v-if="user.email">
+                    <p class="text-muted-foreground mb-1">Email</p>
+                    <p class="font-medium">{{ user.email }}</p>
+                  </div>
+                </div>
 
-            <div v-if="hasSocials" class="space-y-2">
-              <h3 class="text-sm font-semibold flex items-center gap-2">
-                <link-icon class="h-4 w-4" />
-                Социальные сети
-              </h3>
-              <div class="flex flex-wrap gap-3">
-                <a 
-                  v-if="user.socials?.instagram" 
-                  :href="user.socials.instagram" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  class="text-sm text-primary hover:underline"
-                >
-                  Instagram
-                </a>
-                <a 
-                  v-if="user.socials?.vk" 
-                  :href="user.socials.vk" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  class="text-sm text-primary hover:underline"
-                >
-                  ВКонтакте
-                </a>
-                <a 
-                  v-if="user.socials?.telegram" 
-                  :href="user.socials.telegram" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  class="text-sm text-primary hover:underline"
-                >
-                  Telegram
-                </a>
-                <a 
-                  v-if="user.socials?.website" 
-                  :href="user.socials.website" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  class="text-sm text-primary hover:underline"
-                >
-                  Веб-сайт
-                </a>
+                <div v-if="hasSocials" class="space-y-2">
+                  <h3 class="text-sm font-semibold flex items-center gap-2">
+                    <link-icon class="h-4 w-4" />
+                    Социальные сети
+                  </h3>
+                  <div class="flex gap-3">
+                    <a 
+                      v-if="user.socials?.instagram" 
+                      :href="user.socials.instagram" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      title="Instagram"
+                    >
+                      <instagram class="w-5 h-5"/>
+                    </a>
+                    <a 
+                      v-if="user.socials?.vk" 
+                      :href="user.socials.vk" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      title="ВКонтакте"
+                    >
+                      <message-circle class="w-5 h-5"/>
+                    </a>
+                    <a 
+                      v-if="user.socials?.telegram" 
+                      :href="user.socials.telegram" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      title="Telegram"
+                    >
+                      <send class="w-5 h-5" />
+                    </a>
+                    <a 
+                      v-if="user.socials?.website" 
+                      :href="user.socials.website" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      title="Веб-сайт"
+                    >
+                      <globe class="w-5 h-5" />
+                    </a>
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div class="grid grid-cols-2 gap-4 text-sm">
-              <div v-if="user.phone">
-                <p class="text-muted-foreground mb-1">Телефон</p>
-                <p class="font-medium">{{ user.phone }}</p>
+              <div v-if="user.bio" class="space-y-2">
+                <h3 class="text-sm font-semibold">О себе</h3>
+                <p class="text-sm text-muted-foreground whitespace-pre-wrap">{{ user.bio }}</p>
               </div>
-              <div v-if="user.email">
-                <p class="text-muted-foreground mb-1">Email</p>
-                <p class="font-medium">{{ user.email }}</p>
+              <div v-else class="space-y-2">
+                <h3 class="text-sm font-semibold">О себе</h3>
+                <p class="text-sm text-muted-foreground">Информация отсутствует</p>
               </div>
             </div>
           </ui-tabs-content>
@@ -280,48 +288,56 @@ onMounted(async () => {
               </ui-empty>
             </div>
             
-            <ui-carousel v-else class="w-full"
-              :opts="{
-                align: 'start',
-              }"
-            >
-              <ui-carousel-content>
-                <ui-carousel-item 
-                  v-for="portfolio in portfolios" 
-                  :key="portfolio.id" 
-                  class="basis-full md:basis-1/2 lg:basis-1/2"
-                >
-                  <div class="p-2">
-                    <div class="rounded-lg border overflow-hidden bg-card">
-                      <div class="aspect-video w-full overflow-hidden bg-muted">
-                        <img
-                          v-if="portfolio.image_url && portfolio.image_url.length > 0"
-                          :src="portfolio.image_url[0]"
-                          :alt="portfolio.category"
-                          class="h-full w-full object-cover"
-                          loading="lazy"
-                        />
-                      </div>
-                      <div class="p-4 space-y-3">
-                        <div>
-                          <h3 class="font-semibold text-lg mb-1">{{ portfolio.category }}</h3>
-                          <p class="text-sm text-muted-foreground line-clamp-2">
-                            {{ portfolio.description }}
-                          </p>
+            <div v-else class="space-y-4">
+              <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <chevron-left class="w-4 h-4" />
+                <span>Листайте свайпом</span>
+                <chevron-right class="w-4 h-4" />
+              </div>
+              
+              <ui-carousel class="w-full"
+                :opts="{
+                  align: 'start',
+                }"
+              >
+                <ui-carousel-content>
+                  <ui-carousel-item 
+                    v-for="portfolio in portfolios" 
+                    :key="portfolio.id" 
+                    class="basis-full md:basis-1/2 lg:basis-1/2"
+                  >
+                    <div class="p-2">
+                      <div class="rounded-lg border overflow-hidden bg-card">
+                        <div class="aspect-video w-full overflow-hidden bg-muted">
+                          <img
+                            v-if="portfolio.image_url && portfolio.image_url.length > 0"
+                            :src="portfolio.image_url[0]"
+                            :alt="portfolio.category"
+                            class="h-full w-full object-cover"
+                            loading="lazy"
+                          />
                         </div>
-                        <ui-button 
-                          @click="router.push(`/portfolio/${portfolio.id}`)" 
-                          class="w-full"
-                          variant="outline"
-                        >
-                          Перейти
-                        </ui-button>
+                        <div class="p-4 space-y-3">
+                          <div>
+                            <h3 class="font-semibold text-lg mb-1">{{ portfolio.category }}</h3>
+                            <p class="text-sm text-muted-foreground line-clamp-2">
+                              {{ portfolio.description }}
+                            </p>
+                          </div>
+                          <ui-button 
+                            @click="router.push(`/portfolio/${portfolio.id}`)" 
+                            class="w-full"
+                            variant="outline"
+                          >
+                            Перейти
+                          </ui-button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </ui-carousel-item>
-              </ui-carousel-content>
-            </ui-carousel>
+                  </ui-carousel-item>
+                </ui-carousel-content>
+              </ui-carousel>
+            </div>
           </ui-tabs-content>
         </ui-tabs>
       </ui-card-content>
