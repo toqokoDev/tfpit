@@ -223,81 +223,24 @@ useHead({
         </div>
 
         <div v-if="portfolio.image_url && portfolio.image_url.length > 0" class="space-y-4">
-          <div class="relative aspect-[3/4] w-full max-w-md mx-auto overflow-hidden rounded-lg bg-muted">
-            <img
-              :src="portfolio.image_url[currentImageIndex]"
-              :alt="`${portfolio.category} - ${currentImageIndex + 1}`"
-              class="h-full w-full object-cover transition-opacity duration-300"
-              loading="lazy"
-            />
-            
-            <ui-button
-              v-if="portfolio.image_url.length > 1"
-              @click="prevImage"
-              type="button"
-              class="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm p-2 text-foreground shadow-lg transition-all hover:bg-background/90 disabled:opacity-50"
-              :disabled="portfolio.image_url.length <= 1"
-            >
-              <ChevronLeft class="h-5 w-5" />
-            </ui-button>
-            
-            <ui-button
-              v-if="portfolio.image_url.length > 1"
-              @click="nextImage"
-              type="button"
-              class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-background/80 backdrop-blur-sm p-2 text-foreground shadow-lg transition-all hover:bg-background/90 disabled:opacity-50"
-              :disabled="portfolio.image_url.length <= 1"
-            >
-              <ChevronRight class="h-5 w-5" />
-            </ui-button>
-            
-            <div
-              v-if="portfolio.image_url.length > 1"
-              class="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-background/80 backdrop-blur-sm px-3 py-1 text-xs font-medium"
-            >
-              {{ currentImageIndex + 1 }} / {{ portfolio.image_url.length }}
-            </div>
-            
-            <div
-              v-if="portfolio.image_url.length > 1"
-              class="absolute bottom-2 right-2 flex gap-1"
-            >
-              <ui-button
-                v-for="(image, index) in portfolio.image_url"
-                :key="index"
-                @click="currentImageIndex = index"
-                type="button"
-                :class="[
-                  'h-2 w-2 rounded-full transition-all',
-                  index === currentImageIndex
-                    ? 'bg-primary w-6'
-                    : 'bg-background/60 hover:bg-background/80'
-                ]"
-                :aria-label="`Перейти к изображению ${index + 1}`"
-              />
-            </div>
-          </div>
-
-          <div v-if="portfolio.image_url.length > 1" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-            <button
-              v-for="(image, index) in portfolio.image_url"
-              :key="index"
-              @click="currentImageIndex = index"
-              type="button"
-              :class="[
-                'relative aspect-square overflow-hidden rounded-lg border-2 transition-all',
-                index === currentImageIndex
-                  ? 'border-primary'
-                  : 'border-transparent hover:border-primary/50'
-              ]"
-            >
-              <img
-                :src="image"
-                :alt="`Миниатюра ${index + 1}`"
-                class="h-full w-full object-cover"
-              />
-            </button>
-          </div>
+          <ui-carousel class="relative w-full max-w-2xl mx-auto"
+            :opts="{
+              align: 'center',
+            }"
+          >
+            <ui-carousel-content>
+              <ui-carousel-item v-for="img in portfolio.image_url" :key="img" class="basis-full">
+                <div class="p-1 flex justify-center">
+                  <img
+                    :src="img"
+                    :alt="portfolio.category"
+                    class="h-auto object-contain rounded-lg transition-opacity duration-300 max-w-full"
+                    loading="lazy"
+                  />
+                </div>
+              </ui-carousel-item>
+            </ui-carousel-content>
+          </ui-carousel>
         </div>
 
         <div class="flex flex-wrap gap-4 text-sm text-muted-foreground pt-4 border-t">

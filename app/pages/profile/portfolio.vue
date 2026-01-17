@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Plus, Eye, Heart, Globe, Lock, Upload, ChevronLeft, ChevronRight, Pencil, Trash2, AlertTriangle } from 'lucide-vue-next';
+import { Plus, Eye, Heart, Globe, Lock, Upload, ChevronLeft, ChevronRight, Pencil, Trash2, AlertTriangle, Share, BriefcaseBusiness } from 'lucide-vue-next';
 import { toTypedSchema } from "@vee-validate/zod";
 import { Form as VeeForm } from "vee-validate";
 import { Field as VeeField } from "vee-validate";
@@ -23,6 +23,7 @@ const PORTFOLIO_CATEGORIES = [
 ];
 
 const supabase = useSupabaseClient<Database>();
+const { isMobile } = useMobileDetection();
 const userStore = useCurrentUserStore();
 const isAddDialogOpen = ref(false);
 const isViewDialogOpen = ref(false);
@@ -498,13 +499,7 @@ const updatePortfolio = async (values: any) => {
 
     const imageUrlString = imageUrls.join('|');
 
-    const updatePayload: {
-      category: string;
-      description: string;
-      image_url: string;
-      is_public: boolean;
-      updated_at: string;
-    } = {
+    const updatePayload = {
       category: values.category,
       description: values.description,
       image_url: imageUrlString,
@@ -734,13 +729,25 @@ useHead({ title: 'Портфолио' });
     </div>
 
     <div v-else-if="!portfolio || portfolio.length === 0" class="flex flex-col items-center justify-center py-16">
-      <div class="text-center">
-        <p class="text-muted-foreground mb-4 text-lg">У вас пока нет работ в портфолио</p>
-        <ui-button @click="isAddDialogOpen = true">
-          <Plus class="w-4 h-4" />
-          Добавить первую работу
-        </ui-button>
-      </div>
+      <ui-empty>
+        <ui-empty-header>
+          <ui-empty-media variant="icon">
+            <briefcase-business />
+          </ui-empty-media>
+          <ui-empty-title>Работ нет</ui-empty-title>
+          <ui-empty-description>
+            У вас пока нет работ в портфолио
+          </ui-empty-description>
+        </ui-empty-header>
+        <ui-empty-content>
+          <div class="flex gap-2">
+            <ui-button @click="isAddDialogOpen = true">
+              <Plus class="w-4 h-4" />
+              Добавить первую работу
+            </ui-button>
+          </div>
+        </ui-empty-content>
+      </ui-empty>
     </div>
 
     <div v-else class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -833,11 +840,11 @@ useHead({ title: 'Портфолио' });
           <div class="flex flex-wrap gap-4 text-sm text-muted-foreground">
             <div class="flex items-center gap-2">
               <eye class="w-4 h-4" />
-              <span>{{ selectedPortfolio.views_count }} просмотров</span>
+              <span>{{ selectedPortfolio.views_count }} {{ !isMobile ? 'просмотров' : ''}}</span>
             </div>
             <div class="flex items-center gap-2">
               <heart class="w-4 h-4" />
-              <span>{{ selectedPortfolio.likes_count }} лайков</span>
+              <span>{{ selectedPortfolio.likes_count }} {{ !isMobile ? 'лайков' : ''}}</span>
             </div>
             <div v-if="selectedPortfolio.is_public" class="flex items-center gap-2">
               <globe class="w-4 h-4" />
@@ -857,27 +864,35 @@ useHead({ title: 'Портфолио' });
           </div>
         </div>
         
-        <ui-dialog-footer>
-          <ui-button variant="outline" @click="isViewDialogOpen = false">
-            Закрыть
-          </ui-button>
-          <ui-button 
-            v-if="selectedPortfolio?.is_public"
-            variant="outline" 
-            @click="sharePortfolio"
-            size="icon"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-          </ui-button>
-          <ui-button variant="destructive" @click="openDeleteDialog(selectedPortfolio!)" size="icon">
-            <trash2 class="w-4 h-4" />
-          </ui-button>
-          <ui-button @click="openEditDialog(selectedPortfolio!)">
-            <pencil class="w-4 h-4 mr-2" />
-            Редактировать
-          </ui-button>
+        <ui-dialog-footer class="flex justify-between">
+          <div class="flex space-x-2">  
+            <ui-button 
+              v-if="selectedPortfolio?.is_public"
+              variant="outline" 
+              @click="sharePortfolio"
+              size="icon"
+              class="inline-flex"
+            >
+              <share class="w-4 h-4" />
+            </ui-button>
+            
+            <ui-button 
+              variant="destructive" 
+              @click="openDeleteDialog(selectedPortfolio!)"
+              size="icon"
+              class="inline-flex"
+            >
+              <trash2 class="w-4 h-4" />
+            </ui-button>
+            
+            <ui-button 
+              @click="openEditDialog(selectedPortfolio!)"
+              class="inline-flex"
+            >
+              <pencil class="w-4 h-4 mr-2" />
+              Редактировать
+            </ui-button>
+          </div>
         </ui-dialog-footer>
       </ui-dialog-content>
     </ui-dialog>
@@ -907,24 +922,12 @@ useHead({ title: 'Портфолио' });
               errors-to-show="all"
             />
 
-            <vee-field name="description" v-slot="{ field, errors, setValue }">
-              <ui-field :data-invalid="!!errors.length">
-                <ui-field-label for="description">
-                  Описание
-                </ui-field-label>
-                <ui-textarea
-                  id="description"
-                  placeholder="Опишите вашу работу"
-                  :aria-invalid="!!errors.length"
-                  :modelValue="field.value"
-                  @update:modelValue="setValue"
-                />
-                <ui-field-error
-                  v-if="errors.length"
-                  :errors="errors"
-                />
-              </ui-field>
-            </vee-field>
+            <base-textarea
+              name="description"
+              label="Описание"
+              placeholder="Опишите вашу работу"
+              errors-to-show="all"
+            />
 
             <vee-field name="image_file" v-slot="{ errors }">
               <ui-field :data-invalid="!!errors.length">

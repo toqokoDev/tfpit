@@ -2,6 +2,27 @@ import * as zod from "zod";
 import { portfolioSchema } from "./portfolio";
 
 // -------------------------
+// ----- User Socials ------
+// -------------------------
+
+/**
+ * Schema for user socials.
+ */
+export const userSocialsSchema = zod
+  .object({
+    vk: zod.string().nullable(),
+    website: zod.string().nullable(),
+    telegram: zod.string().nullable(),
+    instagram: zod.string().nullable(),
+  })
+  .strict();
+
+/**
+ * The user role schema.
+ */
+export type UserSocialsSchema = zod.infer<typeof userSocialsSchema>;
+
+// -------------------------
 // ----- User Role ---------
 // -------------------------
 
@@ -37,6 +58,8 @@ export const userSchema = zod
     phone: zod.string().optional(),
     city: zod.string().optional(),
     bio: zod.string().optional(),
+    rating: zod.number().default(5),
+    experience_level: zod.number().default(0),
     gender: zod.string().optional(),
     birth_date: zod.union([zod.string(), zod.any()]).optional(),
 
@@ -50,6 +73,7 @@ export const userSchema = zod
     cover_url: zod.string().url().optional(),
 
     role: userRoleSchema.optional(),
+    socials: userSocialsSchema,
     portfolio: zod.array(portfolioSchema).optional(),
 
     created_at: zod.string().optional(),

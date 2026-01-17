@@ -27,6 +27,12 @@ useHead({ title: 'Профиль' });
                 Профиль
               </ui-tabs-trigger>
               <ui-tabs-trigger 
+                value="information" 
+                class="flex-1 md:flex-none justify-center md:justify-start px-2 md:px-4 py-2 text-sm md:text-base min-w-0"
+              >
+                Информация
+              </ui-tabs-trigger>
+              <ui-tabs-trigger 
                 value="additionally" 
                 class="flex-1 md:flex-none justify-center md:justify-start px-2 md:px-4 py-2 text-sm md:text-base min-w-0"
               >
@@ -39,6 +45,10 @@ useHead({ title: 'Профиль' });
         <div class="flex-1 p-6 md:p-8 order-2 md:order-none">
           <ui-tabs-content value="profile" class="mt-0 border-none p-0 outline-none">
             <profile :active-tab="activeTab" />
+          </ui-tabs-content>
+
+          <ui-tabs-content value="information" class="mt-0 border-none p-0 outline-none">
+            <profile-information />
           </ui-tabs-content>
 
           <ui-tabs-content value="additionally" class="mt-0 border-none p-0 outline-none">

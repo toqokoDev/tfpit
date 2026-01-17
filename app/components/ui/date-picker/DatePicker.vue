@@ -6,16 +6,19 @@ import {
 } from '@internationalized/date'
 import { Calendar as CalendarIcon } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
+import type { LayoutTypes } from '../calendar'
 
 interface Props {
   modelValue?: DateValue
   placeholder?: string
   disabled?: boolean
+  layout?: LayoutTypes;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   placeholder: 'Pick a date',
   disabled: false,
+  layout: 'month-and-year',
 })
 
 const emit = defineEmits<{
@@ -49,6 +52,7 @@ const df = new DateFormatter('ru-RU', {
     </ui-popover-trigger>
     <ui-popover-content class="w-auto p-0">
       <ui-calendar 
+        :layout="layout"
         v-model="value" 
         initial-focus
       />

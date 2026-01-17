@@ -75,6 +75,11 @@ const currentUser = computed(() => {
   
   return loadedUser.value;
 });
+
+const route = useRoute();
+const showFooter = computed(() => {
+  return !route.path.startsWith('/profile');
+});
 </script>
 
 <template>
@@ -134,7 +139,7 @@ const currentUser = computed(() => {
       />
     </main>
 
-    <footer class="border-t py-12 bg-muted/30">
+    <footer v-if="showFooter" class="border-t py-12 bg-muted/30">
       <div class="container mx-auto px-4">
         <div class="flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-muted-foreground">
           <p>© 2026 TFP.BY Платформа для творческого взаимодействия.</p>

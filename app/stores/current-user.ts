@@ -62,7 +62,6 @@ export const useCurrentUserStore = defineStore('currentUser', {
         throw createNoLoggedInUserError();
       }
 
-      // Мержим текущие данные пользователя с новыми данными
       this.user = {
         ...this.user,
         ...data,

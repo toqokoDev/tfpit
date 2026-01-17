@@ -33,9 +33,7 @@ const props = withDefaults(defineProps<Props>(), {
   <ui-card 
     class="pt-0 group overflow-hidden transition-all hover:shadow-lg border hover:border-primary/15 cursor-pointer"
   >
-    <!-- Image Container with Overlay -->
     <div class="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-muted/40 to-muted">
-      <!-- Main Image -->
       <img 
         :src="props.image_url[0] || '/placeholder.svg'" 
         :alt="props.category"

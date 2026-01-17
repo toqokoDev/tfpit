@@ -300,29 +300,29 @@ export type Database = {
       }
       photographers: {
         Row: {
-          additional_info: string[] | null
+          additional_info: string | null
           camera: string
           created_at: string | null
           id: string
-          lenses: string[]
+          lenses: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
-          additional_info?: string[] | null
+          additional_info?: string | null
           camera: string
           created_at?: string | null
           id?: string
-          lenses?: string[]
+          lenses?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
-          additional_info?: string[] | null
+          additional_info?: string | null
           camera?: string
           created_at?: string | null
           id?: string
-          lenses?: string[]
+          lenses?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -428,6 +428,47 @@ export type Database = {
         }
         Relationships: []
       }
+      socials: {
+        Row: {
+          created_at: string
+          id: string
+          instagram: string | null
+          telegram: string | null
+          update_at: string
+          user_id: string
+          vk: string | null
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instagram?: string | null
+          telegram?: string | null
+          update_at?: string
+          user_id?: string
+          vk?: string | null
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instagram?: string | null
+          telegram?: string | null
+          update_at?: string
+          user_id?: string
+          vk?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "socials_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stylists: {
         Row: {
           additional_info: string[] | null
@@ -472,12 +513,14 @@ export type Database = {
           cover_url: string | null
           created_at: string
           email: string
+          experience_level: number | null
           first_name: string
           gender: string | null
           id: string
           last_name: string
           phone: string | null
           portfolio_links: Json | null
+          rating: number | null
           role: string
           updated_at: string
         }
@@ -489,12 +532,14 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           email: string
+          experience_level?: number | null
           first_name?: string
           gender?: string | null
           id?: string
           last_name?: string
           phone?: string | null
           portfolio_links?: Json | null
+          rating?: number | null
           role?: string
           updated_at?: string
         }
@@ -506,12 +551,14 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           email?: string
+          experience_level?: number | null
           first_name?: string
           gender?: string | null
           id?: string
           last_name?: string
           phone?: string | null
           portfolio_links?: Json | null
+          rating?: number | null
           role?: string
           updated_at?: string
         }

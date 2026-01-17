@@ -30,6 +30,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
       phone,
       city,
       bio,
+      rating,
+      experience_level,
       cover_url,
       avatar_url,
       gender,
@@ -39,7 +41,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
       updated_at
     `)
     .eq('id', authUser.id)
-    .limit(1)
     .maybeSingle();
 
   const { data: portfolio, error: portfolioFetchError } = await supabase
@@ -57,11 +58,22 @@ export default defineNuxtRouteMiddleware(async (to) => {
     `)
     .eq('user_id', authUser.id);
 
-  if (userFetchError) {
+  const { data: socials, error: socialsFetchError } = await supabase
+    .from('socials')
+    .select(`
+      vk,
+      website,
+      telegram,
+      instagram
+    `)
+    .eq('user_id', authUser.id)
+    .maybeSingle();
+
+  if (userFetchError || portfolioFetchError || socialsFetchError) {
     throw createSomethingWentWrongError();
   }
 
-  if (user === null) {
+  if (user === null || socials === null) {
     const { error: signOutError } = await supabase.auth.signOut();
     if (signOutError) {
       throw createSomethingWentWrongError();
@@ -85,7 +97,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     created_at: item.created_at,
     updated_at: item.updated_at,
   }));
-
+  
   currentUserStore.setUser({
     id: user.id,
     email: user.email,
@@ -96,6 +108,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     phone: user.phone || undefined,
     city: user.city || undefined,
     bio: user.bio || undefined,
+    rating: user.rating || 5,
+    experience_level: user.experience_level || 0,
     gender: user.gender || undefined,
     birth_date: user.birth_date || undefined,
     role: {
@@ -103,6 +117,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
       title: userRole.title,
       description: userRole.description,
     },
+    socials: socials,
     portfolio: portfolioItems,
     created_at: user.created_at,
     updated_at: user.updated_at,
