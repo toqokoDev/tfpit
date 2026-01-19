@@ -121,19 +121,6 @@ function openPortfolioDialog(item: (typeof portfolio.value)[number]) {
   isViewDialogOpen.value = true;
 }
 
-function nextImage() {
-  if (selectedPortfolio.value && selectedPortfolio.value.image_url) {
-    currentImageIndex.value = (currentImageIndex.value + 1) % selectedPortfolio.value.image_url.length;
-  }
-}
-
-function prevImage() {
-  if (selectedPortfolio.value && selectedPortfolio.value.image_url) {
-    const length = selectedPortfolio.value.image_url.length;
-    currentImageIndex.value = (currentImageIndex.value - 1 + length) % length;
-  }
-}
-
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleDateString('ru-RU', {

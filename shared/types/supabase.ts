@@ -103,7 +103,7 @@ export type Database = {
       }
       announcements: {
         Row: {
-          additional_requirements: string[] | null
+          additional_requirements: string
           city: string
           created_at: string | null
           description: string
@@ -111,20 +111,20 @@ export type Database = {
           gender_preference: string | null
           id: string
           location_name: string | null
-          references_urls: string[] | null
+          references_urls: string
           responses_count: number | null
           role_id: string
           shooting_date: string | null
           shooting_date_type: string
           shooting_genre_id: string | null
-          status: string
+          status: string | null
           title: string
           updated_at: string | null
           user_id: string
           views_count: number | null
         }
         Insert: {
-          additional_requirements?: string[] | null
+          additional_requirements?: string
           city: string
           created_at?: string | null
           description: string
@@ -132,20 +132,20 @@ export type Database = {
           gender_preference?: string | null
           id?: string
           location_name?: string | null
-          references_urls?: string[] | null
+          references_urls?: string
           responses_count?: number | null
           role_id: string
           shooting_date?: string | null
           shooting_date_type?: string
           shooting_genre_id?: string | null
-          status?: string
+          status?: string | null
           title: string
           updated_at?: string | null
           user_id: string
           views_count?: number | null
         }
         Update: {
-          additional_requirements?: string[] | null
+          additional_requirements?: string
           city?: string
           created_at?: string | null
           description?: string
@@ -153,13 +153,13 @@ export type Database = {
           gender_preference?: string | null
           id?: string
           location_name?: string | null
-          references_urls?: string[] | null
+          references_urls?: string
           responses_count?: number | null
           role_id?: string
           shooting_date?: string | null
           shooting_date_type?: string
           shooting_genre_id?: string | null
-          status?: string
+          status?: string | null
           title?: string
           updated_at?: string | null
           user_id?: string

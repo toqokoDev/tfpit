@@ -21,6 +21,8 @@ const VALUES = [
   }
 ];
 
+const user = useSupabaseUser();
+
 useHead({ title: 'О сервисе' });
 </script>
 
@@ -77,7 +79,7 @@ useHead({ title: 'О сервисе' });
       </div>
     </section>
 
-    <section class="container mx-auto px-4 pb-24">
+    <section v-if="!user" class="container mx-auto px-4 pb-24">
       <div class="rounded-3xl bg-slate-900 px-8 py-16 text-center text-white dark:bg-primary/10">
         <h2 class="mb-4 text-3xl font-bold md:text-4xl">Готовы создать что-то великое?</h2>
         <p class="mb-8 text-slate-400">Присоединяйтесь к нашему комьюнити и начните собирать портфолио мечты.</p>

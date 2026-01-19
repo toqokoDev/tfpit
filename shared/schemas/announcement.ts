@@ -31,7 +31,14 @@ export const announcementCreateSchema = zod
     shooting_date_type: zod.string({ required_error: 'Выберите тип даты' })
       .min(1, 'Выберите тип даты'),
 
-    shooting_date: zod.string().optional(),
+    shooting_date: zod.preprocess((val) => {
+      if (!val) return undefined;
+      if (typeof val === 'string') return val;
+      if (val && typeof val === 'object' && typeof val.toString === 'function') {
+        return val.toString();
+      }
+      return val;
+    }, zod.string().optional()),
 
     location_name: zod.string().optional(),
 

@@ -125,6 +125,7 @@ async function fetchAnnouncements() {
         title,
         description,
         city,
+        location_name,
         status,
         experience_level,
         responses_count,

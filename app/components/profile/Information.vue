@@ -45,6 +45,25 @@ watch(() => props.activeTab, (newTab) => {
 // ----- Functions -----
 // ---------------------
 
+const getExperienceLevelText = (level: number) => {
+  const getYearsText = (years: number) => {
+    const lastDigit = years % 10;
+    const lastTwoDigits = years % 100;
+    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return `${years} лет`;
+    if (lastDigit === 1) return `${years} год`;
+    if (lastDigit >= 2 && lastDigit <= 4) return `${years} года`;
+    return `${years} лет`;
+  };
+
+  if (level === 0) return 'Нет опыта';
+  if (level < 2) return `Начинающий (${getYearsText(level)})`;
+  if (level < 5) return `Начинающий (${getYearsText(level)})`;
+  if (level < 8) return `Любитель (${getYearsText(level)})`;
+  if (level < 12) return `Опытный (${getYearsText(level)})`;
+  return `Профессионал (${getYearsText(level)})`;
+};
+
 const refreshFormData = () => {
   const user = currentUserStore.getUser();
   if (!user) return;
@@ -159,7 +178,7 @@ const informationUpdate = handleSubmit(async (values) => {
         <vee-field name="experience_level" v-slot="{ field, errors, setValue }">
           <ui-field :data-invalid="!!errors.length">
             <ui-field-label>
-              {{ field.value < 3 ? 'Начинающий' : field.value >= 3 && field.value < 10 ? 'Любитель' : 'Профессионал' }}
+              {{ getExperienceLevelText(field.value[0] || 0) }}
             </ui-field-label>
             <div class="mt-2">
               <ui-slider

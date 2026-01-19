@@ -72,9 +72,11 @@ async function handleLogout() {
             Портфолио
           </NuxtLink>
         </ui-dropdown-menu-item>
-        <ui-dropdown-menu-item>
-          <megaphone />
-          Объявления
+        <ui-dropdown-menu-item as-child>
+          <NuxtLink to="/profile/offers">
+            <megaphone />
+            Объявления
+          </NuxtLink>
         </ui-dropdown-menu-item>
       </ui-dropdown-menu-group>
       <ui-dropdown-menu-separator />

@@ -2,6 +2,8 @@
 
 const TAG_LIST = ['Fashion', 'Portrait', 'Street', 'Studio', 'Nude', 'Cosplay'];
 
+const user = useSupabaseUser();
+
 useHead({ title: 'Главная' });
 </script>
 
@@ -32,7 +34,7 @@ useHead({ title: 'Главная' });
             <NuxtLink to="/offer" as-child>
               <ui-button size="lg" class="h-12 px-8 text-base">Найти проект</ui-button>
             </NuxtLink>
-            <NuxtLink to="/auth/register" as-child>
+            <NuxtLink v-if="!user" to="/auth/register" as-child>
               <ui-button size="lg" variant="outline" class="h-12 px-8 text-base">Присоединиться</ui-button>
             </NuxtLink>
           </div>
