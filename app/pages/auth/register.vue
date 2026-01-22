@@ -55,7 +55,7 @@ const register = handleSubmit(async (values) => {
       email: values.email,
       password: values.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        emailRedirectTo: 'https://tfpit-dfd3f27d1bb1.herokuapp.com/auth/confirm',
         data: {
           first_name: values.first_name,
           last_name: values.last_name,

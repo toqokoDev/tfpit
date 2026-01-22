@@ -1,8 +1,56 @@
 <script setup lang="ts">
+import { Briefcase } from 'lucide-vue-next';
+
 
 const TAG_LIST = ['Fashion', 'Portrait', 'Street', 'Studio', 'Nude', 'Cosplay'];
 
 const user = useSupabaseUser();
+const supabase = useSupabaseClient<Database>();
+const isLoading = ref(false);
+
+const announcements = ref<any[]>([]);
+
+async function fetchAnnouncements() {
+  try {
+    isLoading.value = true;
+    
+    const { data, error } = await supabase
+      .from('announcements')
+      .select(`
+        id,
+        title,
+        description,
+        city,
+        location_name,
+        experience_level,
+        responses_count,
+        views_count,
+        created_at,
+        shooting_date,
+        user:users(id, first_name, last_name, avatar_url),
+        references_urls
+      `, 
+      { count: 'exact' })
+      .limit(3);
+
+    if (error) {
+      throw error;
+    }
+
+    console.log(data);
+
+    announcements.value = data;
+    
+  } catch (error) {
+    console.error('Ошибка загрузки объявлений:', error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  fetchAnnouncements();
+});
 
 useHead({ title: 'Главная' });
 </script>
@@ -67,8 +115,46 @@ useHead({ title: 'Главная' });
           </NuxtLink>
         </div>
 
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <base-offer v-for="i in 3" />
+        <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <ui-card v-for="i in 3" :key="i" class="space-y-4">
+            <ui-card-header>
+              <ui-skeleton class="h-6 w-3/4" />
+              <ui-skeleton class="h-4 w-full mt-2" />
+              <ui-skeleton class="h-4 w-2/3 mt-2" />
+            </ui-card-header>
+            <ui-card-content class="space-y-3">
+              <div class="flex gap-2">
+                <ui-skeleton class="h-5 w-20" />
+                <ui-skeleton class="h-5 w-24" />
+              </div>
+              <ui-skeleton class="h-4 w-full" />
+              <ui-skeleton class="h-4 w-2/3" />
+              <div class="flex items-center gap-4 pt-2 border-t">
+                <ui-skeleton class="h-4 w-12" />
+                <ui-skeleton class="h-4 w-12" />
+                <ui-skeleton class="h-4 w-20 ml-auto" />
+              </div>
+            </ui-card-content>
+          </ui-card>
+        </div>
+
+        <div v-else-if="announcements.length === 0" class="py-12">
+          <ui-empty>
+            <ui-empty-header>
+              <ui-empty-media variant="icon">
+                <briefcase class="h-12 w-12 text-muted-foreground" />
+              </ui-empty-media>
+              <ui-empty-title>Объявления не найдены</ui-empty-title>
+            </ui-empty-header>
+          </ui-empty>
+        </div>
+
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <offer-announcement-card
+            v-for="announcement in announcements"
+            :key="announcement.id"
+            :announcement="announcement"
+          />
         </div>
       </div>
     </section>

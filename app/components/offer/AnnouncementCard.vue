@@ -7,16 +7,17 @@ interface Announcement {
   description: string;
   city: string | null;
   location_name: string | null;
-  status: string;
-  experience_level: string | null;
   responses_count: number | null;
   views_count: number | null;
   created_at: string | null;
   shooting_date: string | null;
   references_urls: string | null;
-  role: { id: string; title: string } | null;
-  shooting_genre: { id: string; title: string } | null;
-  user: { id: string; first_name: string; last_name: string; avatar_url: string | null } | null;
+  user: { 
+    id: string; 
+    first_name: string; 
+    last_name: string; 
+    avatar_url: string | null 
+  } | null;
 }
 
 const props = defineProps<{

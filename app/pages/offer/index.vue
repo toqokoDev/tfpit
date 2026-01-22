@@ -133,9 +133,9 @@ async function fetchAnnouncements() {
         created_at,
         shooting_date,
         shooting_date_type,
-        role_id,
+        role:role(id, title),
         shooting_genre_id,
-        user_id,
+        user:users(id, first_name, last_name, avatar_url),
         references_urls
       `, { count: 'exact' });
 
@@ -176,29 +176,15 @@ async function fetchAnnouncements() {
 
     const announcementsData = data || [];
     
-    const roleIds = [...new Set(announcementsData.map(a => a.role_id).filter((id): id is string => !!id))];
-    const { data: rolesData } = roleIds.length > 0 ? await supabase
-      .from('roles')
-      .select('id, title')
-      .in('id', roleIds) : { data: [] };
-    
     const genreIds = [...new Set(announcementsData.map(a => a.shooting_genre_id).filter((id): id is string => !!id))];
     const { data: genresData } = genreIds.length > 0 ? await supabase
       .from('shooting_genres')
       .select('id, title')
       .in('id', genreIds) : { data: [] };
-    
-    const userIds = [...new Set(announcementsData.map(a => a.user_id).filter((id): id is string => !!id))];
-    const { data: usersData } = userIds.length > 0 ? await supabase
-      .from('users')
-      .select('id, first_name, last_name, avatar_url')
-      .in('id', userIds) : { data: [] };
 
     announcements.value = announcementsData.map(announcement => ({
       ...announcement,
-      role: rolesData?.find(r => r.id === announcement.role_id) || null,
       shooting_genre: genresData?.find(g => g.id === announcement.shooting_genre_id) || null,
-      user: usersData?.find(u => u.id === announcement.user_id) || null
     }));
     
     totalCount.value = count || 0;
