@@ -113,7 +113,7 @@ export type Database = {
           location_name: string | null
           references_urls: string
           responses_count: number | null
-          role_id: string
+          role: string
           shooting_date: string | null
           shooting_date_type: string
           shooting_genre_id: string | null
@@ -134,7 +134,7 @@ export type Database = {
           location_name?: string | null
           references_urls?: string
           responses_count?: number | null
-          role_id: string
+          role: string
           shooting_date?: string | null
           shooting_date_type?: string
           shooting_genre_id?: string | null
@@ -155,7 +155,7 @@ export type Database = {
           location_name?: string | null
           references_urls?: string
           responses_count?: number | null
-          role_id?: string
+          role?: string
           shooting_date?: string | null
           shooting_date_type?: string
           shooting_genre_id?: string | null
@@ -167,8 +167,8 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "announcements_role_id_fkey"
-            columns: ["role_id"]
+            foreignKeyName: "announcements_role_fkey"
+            columns: ["role"]
             isOneToOne: false
             referencedRelation: "roles"
             referencedColumns: ["id"]

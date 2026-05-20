@@ -43,7 +43,7 @@ async function loadAnnouncements() {
         shooting_date_type,
         location_name,
         references_urls,
-        role_id,
+        role,
         shooting_genre_id
       `)
       .eq('user_id', authUserData.user.id)

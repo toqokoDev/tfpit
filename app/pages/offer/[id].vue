@@ -18,7 +18,6 @@ interface AnnouncementData {
   gender_preference: string | null;
   additional_requirements: string | null;
   references_urls: string | string[] | null;
-  role_id: string;
   shooting_genre_id: string | null;
   user_id: string;
   role?: { id: string; title: string } | null;
@@ -68,9 +67,9 @@ async function loadAnnouncement() {
         gender_preference,
         additional_requirements,
         references_urls,
-        role_id,
         shooting_genre_id,
-        user_id
+        user_id,
+        role:role(id, title)
       `)
       .eq('id', announcementId)
       .single();
@@ -79,12 +78,10 @@ async function loadAnnouncement() {
       throw new Error('Объявление не найдено');
     }
 
-    const roleId = announcementData.role_id;
     const genreId = announcementData.shooting_genre_id;
     const userId = announcementData.user_id;
 
-    const [roleResult, genreResult, userResult] = await Promise.all([
-      roleId ? supabase.from('roles').select('id, title').eq('id', roleId).single() : Promise.resolve({ data: null }),
+    const [genreResult, userResult] = await Promise.all([
       genreId ? supabase.from('shooting_genres').select('id, title').eq('id', genreId).single() : Promise.resolve({ data: null }),
       supabase.from('users').select('id, first_name, last_name, avatar_url, experience_level, role:role(title)').eq('id', userId).single()
     ]);
@@ -92,7 +89,6 @@ async function loadAnnouncement() {
     announcement.value = {
       ...announcementData,
       references_urls: announcementData.references_urls as string | null,
-      role: roleResult.data || null,
       shooting_genre: genreResult.data || null,
       user: userResult.data || null,
     };

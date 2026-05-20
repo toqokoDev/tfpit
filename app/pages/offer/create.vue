@@ -22,7 +22,7 @@ const { handleSubmit, values } = useForm({
     title: '',
     description: '',
     city: '',
-    role_id: '',
+    role: '',
     shooting_genre_id: '',
     experience_level: '',
     shooting_date_type: '',
@@ -158,7 +158,7 @@ const onSubmit = handleSubmit(async (values) => {
       title: values.title,
       description: values.description,
       city: values.city,
-      role_id: values.role_id,
+      role: values.role,
       shooting_date_type: values.shooting_date_type,
       status: 'open',
       user_id: currentUser.value.id,
@@ -298,7 +298,7 @@ useHead({ title: 'Создать объявление' });
                   </ui-field>
                 </VeeField>
 
-                <VeeField name="role_id" v-slot="{ field, errors, setValue }">
+                <VeeField name="role" v-slot="{ field, errors, setValue }">
                   <ui-field :data-invalid="!!errors.length">
                     <ui-field-label>Роль *</ui-field-label>
                     <ui-select

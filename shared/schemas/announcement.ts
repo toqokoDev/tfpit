@@ -20,7 +20,7 @@ export const announcementCreateSchema = zod
     city: zod.string({ required_error: 'Укажите город' })
       .min(1, 'Укажите город'),
 
-    role_id: zod.string({ required_error: 'Выберите роль' })
+    role: zod.string({ required_error: 'Выберите роль' })
       .min(1, 'Выберите роль'),
 
     shooting_genre_id: zod.string({ required_error: 'Выберите жанр' })

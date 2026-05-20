@@ -26,7 +26,7 @@ const { handleSubmit, values, setValues } = useForm({
     title: '',
     description: '',
     city: '',
-    role_id: '',
+    role: '',
     shooting_genre_id: '',
     experience_level: '',
     shooting_date_type: '',
@@ -113,7 +113,7 @@ async function loadAnnouncement() {
         gender_preference,
         additional_requirements,
         references_urls,
-        role_id,
+        role,
         shooting_genre_id
       `)
       .eq('id', announcementId)
@@ -154,7 +154,7 @@ async function loadAnnouncement() {
       title: announcementData.title || '',
       description: announcementData.description || '',
       city: announcementData.city || '',
-      role_id: announcementData.role_id || '',
+      role: announcementData.role || '',
       shooting_genre_id: announcementData.shooting_genre_id || '',
       experience_level: announcementData.experience_level || '',
       shooting_date_type: announcementData.shooting_date_type || '',
@@ -271,7 +271,7 @@ const onSubmit = handleSubmit(async (values) => {
       title: values.title,
       description: values.description,
       city: values.city,
-      role_id: values.role_id,
+      role: values.role,
       shooting_date_type: values.shooting_date_type,
     };
 
@@ -404,7 +404,7 @@ useHead({ title: 'Редактировать объявление' });
                 />
 
                 <base-select
-                  name="role_id"
+                  name="role"
                   label="Роль *"
                   placeholder="Выберите роль"
                   :options="roles"

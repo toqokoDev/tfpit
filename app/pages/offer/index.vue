@@ -54,7 +54,7 @@ function loadFiltersFromURL() {
   const query = route.query;
   searchQuery.value = (query.search as string) || '';
   selectedCity.value = (query.city as string) || '';
-  selectedRoleId.value = (query.role_id as string) || '';
+  selectedRoleId.value = (query.role as string) || '';
   selectedGenreId.value = (query.genre_id as string) || '';
   selectedStatus.value = (query.status as string) || '';
   selectedExperienceLevel.value = (query.experience_level as string) || '';
@@ -66,7 +66,7 @@ function updateURL() {
   
   if (searchQuery.value) query.search = searchQuery.value;
   if (selectedCity.value) query.city = selectedCity.value;
-  if (selectedRoleId.value) query.role_id = selectedRoleId.value;
+  if (selectedRoleId.value) query.role = selectedRoleId.value;
   if (selectedGenreId.value) query.genre_id = selectedGenreId.value;
   if (selectedStatus.value) query.status = selectedStatus.value;
   if (selectedExperienceLevel.value) query.experience_level = selectedExperienceLevel.value;
@@ -148,7 +148,7 @@ async function fetchAnnouncements() {
     }
 
     if (selectedRoleId.value) {
-      query = query.eq('role_id', selectedRoleId.value);
+      query = query.eq('role', selectedRoleId.value);
     }
 
     if (selectedGenreId.value) {
