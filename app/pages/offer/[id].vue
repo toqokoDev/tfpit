@@ -19,7 +19,6 @@ interface AnnouncementData {
   additional_requirements: string | null;
   references_urls: string | string[] | null;
   shooting_genre_id: string | null;
-  user_id: string;
   role?: { id: string; title: string } | null;
   shooting_genre?: { id: string; title: string } | null;
   user?: { id: string; first_name: string; last_name: string; avatar_url: string | null; role: { title: string } | null; experience_level: number | null } | null;
@@ -68,8 +67,8 @@ async function loadAnnouncement() {
         additional_requirements,
         references_urls,
         shooting_genre_id,
-        user_id,
-        role:role(id, title)
+        role:role(id, title),
+        user:users(id, first_name, last_name, avatar_url, experience_level, role:role(title))
       `)
       .eq('id', announcementId)
       .single();
@@ -79,18 +78,15 @@ async function loadAnnouncement() {
     }
 
     const genreId = announcementData.shooting_genre_id;
-    const userId = announcementData.user_id;
 
-    const [genreResult, userResult] = await Promise.all([
-      genreId ? supabase.from('shooting_genres').select('id, title').eq('id', genreId).single() : Promise.resolve({ data: null }),
-      supabase.from('users').select('id, first_name, last_name, avatar_url, experience_level, role:role(title)').eq('id', userId).single()
-    ]);
+    const genreResult = genreId
+      ? await supabase.from('shooting_genres').select('id, title').eq('id', genreId).single()
+      : { data: null };
 
     announcement.value = {
       ...announcementData,
       references_urls: announcementData.references_urls as string | null,
       shooting_genre: genreResult.data || null,
-      user: userResult.data || null,
     };
     
     await supabase

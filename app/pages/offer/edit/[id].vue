@@ -101,7 +101,7 @@ async function loadAnnouncement() {
       .from('announcements')
       .select(`
         id,
-        user_id,
+        user,
         title,
         description,
         city,
@@ -123,7 +123,7 @@ async function loadAnnouncement() {
       throw new Error('Объявление не найдено');
     }
 
-    if (announcementData.user_id !== currentUser.value.id) {
+    if (announcementData.user !== currentUser.value.id) {
       toast.error('У вас нет прав для редактирования этого объявления');
       router.push(`/offer/${announcementId}`);
       return;

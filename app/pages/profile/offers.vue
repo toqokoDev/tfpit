@@ -46,7 +46,7 @@ async function loadAnnouncements() {
         role,
         shooting_genre_id
       `)
-      .eq('user_id', authUserData.user.id)
+      .eq('user', authUserData.user.id)
       .order('created_at', { ascending: false });
     
     if (error) throw error;

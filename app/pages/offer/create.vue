@@ -161,7 +161,7 @@ const onSubmit = handleSubmit(async (values) => {
       role: values.role,
       shooting_date_type: values.shooting_date_type,
       status: 'open',
-      user_id: currentUser.value.id,
+      user: currentUser.value.id,
     };
 
     if (values.shooting_genre_id) announcementData.shooting_genre_id = values.shooting_genre_id;

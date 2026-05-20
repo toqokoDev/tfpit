@@ -120,7 +120,7 @@ export type Database = {
           status: string | null
           title: string
           updated_at: string | null
-          user_id: string
+          user: string
           views_count: number | null
         }
         Insert: {
@@ -141,7 +141,7 @@ export type Database = {
           status?: string | null
           title: string
           updated_at?: string | null
-          user_id: string
+          user: string
           views_count?: number | null
         }
         Update: {
@@ -162,7 +162,7 @@ export type Database = {
           status?: string | null
           title?: string
           updated_at?: string | null
-          user_id?: string
+          user?: string
           views_count?: number | null
         }
         Relationships: [
@@ -181,8 +181,8 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "announcements_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "announcements_user_fkey"
+            columns: ["user"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
