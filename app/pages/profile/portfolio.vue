@@ -4,6 +4,7 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { Form as VeeForm } from "vee-validate";
 import { Field as VeeField } from "vee-validate";
 import { toast } from "vue-sonner";
+import { cropImageFileToSquare, readFileAsDataUrl } from '../../utils/imageCrop';
 
 // ----------------
 // ----- Data -----
@@ -172,7 +173,7 @@ onMounted(async () => {
   await loadPortfolio();
 });
 
-const handleImageSelect = (event: Event) => {
+const handleImageSelect = async (event: Event) => {
   const target = event.target as HTMLInputElement;
   const files = Array.from(target.files || []);
   if (files.length === 0) return;
@@ -192,21 +193,21 @@ const handleImageSelect = (event: Event) => {
       continue;
     }
 
-    validFiles.push(file);
+    try {
+      const croppedFile = await cropImageFileToSquare(file);
+      const url = await readFileAsDataUrl(croppedFile);
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const url = e.target?.result as string;
-      newPreviews.push({ url, file });
-      
-      if (newPreviews.length === validFiles.length) {
-        previewImageUrls.value = [...previewImageUrls.value, ...newPreviews];
-      }
-    };
-    reader.readAsDataURL(file);
+      validFiles.push(croppedFile);
+      newPreviews.push({ url, file: croppedFile });
+    } catch (error) {
+      toast.error(`Не удалось обрезать ${file.name}`);
+      console.error('Ошибка обрезки изображения:', error);
+    }
   }
 
   selectedImageFiles.value = [...selectedImageFiles.value, ...validFiles];
+  previewImageUrls.value = [...previewImageUrls.value, ...newPreviews];
+  target.value = '';
 };
 
 const uploadImageToStorage = async (file: File, userId: string): Promise<string> => {
@@ -293,7 +294,7 @@ const createPortfolio = async (values: any) => {
       .insert({
         user_id: user.id,
         category: values.category,
-        description: values.description,
+        description: values.description || '',
         image_url: imageUrlString, 
         is_public: values.is_public,
         likes_count: 0,
@@ -488,7 +489,7 @@ const updatePortfolio = async (values: any) => {
 
     const updatePayload = {
       category: values.category,
-      description: values.description,
+      description: values.description || '',
       image_url: imageUrlString,
       is_public: Boolean(values.is_public),
       updated_at: new Date().toISOString(),
@@ -658,7 +659,7 @@ useHead({ title: 'Портфолио' });
                         {{ isUploadingImage ? 'Загрузка...' : selectedImageFiles.length > 0 ? `Добавить ещё (${selectedImageFiles.length} выбрано)` : 'Выбрать изображения' }}
                       </ui-button>
                       <p class="mt-1 text-xs text-muted-foreground">
-                        Поддерживаемые форматы: JPG, PNG, GIF. Максимальный размер файла: 10МБ
+                        Поддерживаемые форматы: JPG, PNG, GIF. Максимальный размер файла: 10МБ. Перед сохранением изображения обрезаются в квадрат.
                       </p>
                     </div>
                   </div>
@@ -737,37 +738,33 @@ useHead({ title: 'Портфолио' });
       </ui-empty>
     </div>
 
-    <div v-else class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <div
+    <div v-else class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+      <base-portfolio
         v-for="item in portfolio"
         :key="item.id"
+        :category="item.category"
+        :description="item.description"
+        :image_url="item.image_url"
+        :is_public="item.is_public"
+        :likes_count="item.likes_count"
+        :views_count="item.views_count"
+        :created_at="item.created_at"
+        :updated_at="item.updated_at"
         @click="openPortfolioDialog(item)"
-        class="cursor-pointer"
-      >
-        <base-portfolio
-          :category="item.category"
-          :description="item.description"
-          :image_url="item.image_url"
-          :is_public="item.is_public"
-          :likes_count="item.likes_count"
-          :views_count="item.views_count"
-          :created_at="item.created_at"
-          :updated_at="item.updated_at"
-        />
-      </div>
+      />
     </div>
 
     <ui-dialog :open="isViewDialogOpen" @update:open="(open) => { isViewDialogOpen = open; if (!open) currentImageIndex = 0; }">
       <ui-dialog-content class="sm:max-w-md">
         <ui-dialog-header v-if="selectedPortfolio">
           <ui-dialog-title>{{ selectedPortfolio.category }}</ui-dialog-title>
-          <ui-dialog-description>
+          <ui-dialog-description v-if="selectedPortfolio.description">
             {{ selectedPortfolio.description }}
           </ui-dialog-description>
         </ui-dialog-header>
         
         <div v-if="selectedPortfolio" class="py-4">
-          <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-2">
+          <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-2 md:hidden">
             <chevron-left class="w-4 h-4" />
             <span>Листайте свайпом</span>
             <chevron-right class="w-4 h-4" />
@@ -775,7 +772,7 @@ useHead({ title: 'Портфолио' });
           <div v-if="selectedPortfolio.image_url && selectedPortfolio.image_url.length > 0" class="mb-6 flex justify-center">
             <ui-carousel class="relative w-full max-w-2xl mx-auto"
               :opts="{
-                align: 'start',
+                align: 'center',
               }"
             >
               <ui-carousel-content>
@@ -784,7 +781,7 @@ useHead({ title: 'Портфолио' });
                   :key="img" 
                   class="basis-full"
                 >
-                  <div class="p-1 flex justify-center">
+                  <div class="p-1 flex items-center justify-center">
                     <img
                       :src="img"
                       :alt="selectedPortfolio.category"
@@ -794,6 +791,8 @@ useHead({ title: 'Портфолио' });
                   </div>
                 </ui-carousel-item>
               </ui-carousel-content>
+              <ui-carousel-previous class="hidden md:flex left-4 z-30 bg-background/90 shadow-md" />
+              <ui-carousel-next class="hidden md:flex right-4 z-30 bg-background/90 shadow-md" />
             </ui-carousel>
           </div>
 
@@ -963,7 +962,7 @@ useHead({ title: 'Портфолио' });
                       {{ isUploadingImage ? 'Загрузка...' : selectedImageFiles.length > 0 ? `Добавить ещё (${selectedImageFiles.length} выбрано)` : 'Добавить изображения' }}
                     </ui-button>
                     <p class="mt-1 text-xs text-muted-foreground">
-                      Поддерживаемые форматы: JPG, PNG, GIF. Максимальный размер файла: 10МБ
+                      Поддерживаемые форматы: JPG, PNG, GIF. Максимальный размер файла: 10МБ. Новые изображения будут обрезаны в квадрат.
                     </p>
                   </div>
                 </div>

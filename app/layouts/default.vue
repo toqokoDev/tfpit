@@ -7,24 +7,33 @@ function toggleColor() {
   colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark';
 }
 
+const navLinks = [
+  { to: '/offer', label: 'Объявления' },
+  { to: '/specialists', label: 'Специалисты' },
+  { to: '/about', label: 'О сервисе' },
+];
+
 const currentUserStore = useCurrentUserStore();
 const isDataloading = ref(true);
 
 const { data: loadedUser } = await useAsyncData('init-user', async () => {
-  if (currentUserStore.isExist()) {
-    await sleep(150);
-    isDataloading.value = false;
-    return null;
-  }
-
   const supabase = useSupabaseClient<Database>();
   const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
 
   if (authError || authUser === null) {
+    currentUserStore.clearUser();
     await sleep(150);
     isDataloading.value = false;
     return null;
   }
+
+  if (currentUserStore.user?.id === authUser.id) {
+    await sleep(150);
+    isDataloading.value = false;
+    return null;
+  }
+
+  currentUserStore.clearUser();
 
   const { data: user, error: userFetchError } = await supabase
     .from('users')
@@ -43,6 +52,7 @@ const { data: loadedUser } = await useAsyncData('init-user', async () => {
   isDataloading.value = false;
 
   return {
+    id: user.id,
     email: user.email,
     first_name: user.first_name,
     last_name: user.last_name,
@@ -53,9 +63,10 @@ const { data: loadedUser } = await useAsyncData('init-user', async () => {
 });
 
 const currentUser = computed(() => {
-  if (currentUserStore.isExist()) {
+  if (currentUserStore.user && (!loadedUser.value || currentUserStore.user.id === loadedUser.value.id)) {
     const user = currentUserStore.user!;
     return {
+      id: user.id,
       email: user.email,
       first_name: user.first_name,
       last_name: user.last_name,
@@ -75,48 +86,67 @@ const showFooter = computed(() => {
 <template>
   <div class="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
     <header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div class="container mx-auto flex h-16 items-center justify-between px-4">
-        
-        <NuxtLink to="/" class="flex items-center gap-2 font-bold text-xl tracking-tighter">
-          <base-logo />
-        </NuxtLink>
+      <div class="container mx-auto px-4">
+        <div class="flex min-h-16 items-center justify-between gap-3 py-2 md:h-16 md:py-0">
+          <NuxtLink to="/" class="flex shrink-0 items-center gap-2 font-bold text-xl tracking-tighter">
+            <base-logo />
+          </NuxtLink>
 
-        <nav class="flex items-center gap-4">
-          <NuxtLink to="/offer" class="text-sm font-medium hover:text-primary transition-colors">Объявления</NuxtLink>
-          <NuxtLink to="/about" class="hidden md:flex text-sm font-medium hover:text-primary transition-colors">О сервисе</NuxtLink>
-        </nav>
-
-        <template v-if="isDataloading">
-          <ui-skeleton class="w-[100px] h-[30px] md:w-[150px] rounded-full" />
-        </template>
-        <template v-else>
-          <div class="flex items-center gap-2">
-            <ui-button 
-              variant="ghost" 
-              size="icon" 
-              class="rounded-full shadow-none" 
-              @click="toggleColor"
+          <nav class="hidden items-center gap-4 md:flex">
+            <NuxtLink
+              v-for="link in navLinks"
+              :key="link.to"
+              :to="link.to"
+              class="text-sm font-medium hover:text-primary transition-colors"
             >
-              <SunDim v-if="colorMode.value === 'light'" class="size-6" />
-              <MoonStar v-else-if="colorMode.value === 'dark'" class="size-6" />
-            </ui-button>
+              {{ link.label }}
+            </NuxtLink>
+          </nav>
 
-            <div class="h-6 w-[1px] bg-border mx-1 block"></div>
-            
-            <div v-if="currentUser">
-              <base-profile :user="currentUser"/>
-            </div>
+          <template v-if="isDataloading">
+            <ui-skeleton class="w-[100px] h-[30px] md:w-[150px] rounded-full" />
+          </template>
+          <template v-else>
+            <div class="flex shrink-0 items-center gap-2">
+              <ui-button
+                variant="ghost"
+                size="icon"
+                class="rounded-full shadow-none"
+                @click="toggleColor"
+              >
+                <SunDim v-if="colorMode.value === 'light'" class="size-6" />
+                <MoonStar v-else-if="colorMode.value === 'dark'" class="size-6" />
+              </ui-button>
 
-            <div v-else>
-              <NuxtLink to="/auth/login">
-                <ui-button size="sm" class="font-semibold shadow-md">
-                  Войти
-                </ui-button>
-              </NuxtLink>
+              <div class="h-6 w-[1px] bg-border mx-1 block"></div>
+
+              <div v-if="currentUser">
+                <base-profile :user="currentUser"/>
+              </div>
+
+              <div v-else>
+                <NuxtLink to="/auth/login">
+                  <ui-button size="sm" class="font-semibold shadow-md">
+                    Войти
+                  </ui-button>
+                </NuxtLink>
+              </div>
             </div>
+          </template>
+        </div>
+
+        <nav class="-mx-4 flex justify-center overflow-x-auto border-t px-4 py-2 md:hidden">
+          <div class="flex min-w-max items-center gap-4">
+            <NuxtLink
+              v-for="link in navLinks"
+              :key="link.to"
+              :to="link.to"
+              class="text-sm font-medium whitespace-nowrap hover:text-primary transition-colors"
+            >
+              {{ link.label }}
+            </NuxtLink>
           </div>
-        </template>
-
+        </nav>
       </div>
     </header>
 

@@ -534,15 +534,15 @@ useHead({ title: 'Редактировать объявление' });
             </ui-button>
 
             <div v-if="imageFiles.length > 0" class="space-y-4">
-              <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground md:hidden">
                 <chevron-left class="w-4 h-4" />
                 <span>Листайте свайпом</span>
                 <chevron-right class="w-4 h-4" />
               </div>
 
               <ui-carousel
-                class="w-full"
-                :opts="{ align: 'start' }"
+                class="relative w-full"
+                :opts="{ align: 'center' }"
               >
                 <ui-carousel-content>
                   <ui-carousel-item
@@ -550,12 +550,12 @@ useHead({ title: 'Редактировать объявление' });
                     :key="item.url"
                     class="basis-full md:basis-1/2 lg:basis-1/3"
                   >
-                    <div class="p-2 relative group">
-                      <div class="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
+                    <div class="p-2 relative group flex justify-center">
+                      <div class="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted flex items-center justify-center">
                         <img
                           :src="item.url"
                           :alt="`Preview ${index + 1}`"
-                          class="h-full w-full object-cover"
+                          class="h-full w-full object-contain"
                         />
                         <button
                           type="button"
@@ -568,6 +568,8 @@ useHead({ title: 'Редактировать объявление' });
                     </div>
                   </ui-carousel-item>
                 </ui-carousel-content>
+                <ui-carousel-previous class="hidden md:flex left-4 z-30 bg-background/90 shadow-md" />
+                <ui-carousel-next class="hidden md:flex right-4 z-30 bg-background/90 shadow-md" />
               </ui-carousel>
             </div>
           </ui-card-content>

@@ -85,7 +85,7 @@ function getErrors(errors: string[]): string[] {
 <template>
   <vee-field
     :name="name"
-    v-slot="{ field, errors }"
+    v-slot="{ field, errors, setValue, handleBlur }"
   >
     <ui-field :data-invalid="!!errors.length">
       <ui-field-label :for="name">
@@ -99,7 +99,10 @@ function getErrors(errors: string[]): string[] {
         :placeholder="placeholder"
         :autocomplete="autocomplete"
         :aria-invalid="!!errors.length"
-        v-bind="field"
+        :name="field.name"
+        :model-value="field.value ?? ''"
+        @update:model-value="setValue"
+        @blur="handleBlur"
         v-maska="mask"
       />
 

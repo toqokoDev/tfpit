@@ -101,6 +101,119 @@ export type Database = {
           },
         ]
       }
+      announcement_chat_messages: {
+        Row: {
+          body: string
+          chat_id: string
+          created_at: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          chat_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          chat_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "announcement_chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcement_chats: {
+        Row: {
+          announcement_id: string
+          applicant_last_read_at: string | null
+          applicant_id: string
+          created_at: string
+          id: string
+          initial_message: string
+          last_message_at: string | null
+          last_message_sender_id: string | null
+          owner_last_read_at: string | null
+          owner_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          announcement_id: string
+          applicant_last_read_at?: string | null
+          applicant_id: string
+          created_at?: string
+          id?: string
+          initial_message?: string
+          last_message_at?: string | null
+          last_message_sender_id?: string | null
+          owner_last_read_at?: string | null
+          owner_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          announcement_id?: string
+          applicant_last_read_at?: string | null
+          applicant_id?: string
+          created_at?: string
+          id?: string
+          initial_message?: string
+          last_message_at?: string | null
+          last_message_sender_id?: string | null
+          owner_last_read_at?: string | null
+          owner_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_chats_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_chats_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_chats_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_chats_last_message_sender_id_fkey"
+            columns: ["last_message_sender_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcements: {
         Row: {
           additional_requirements: string
@@ -110,6 +223,7 @@ export type Database = {
           experience_level: string | null
           gender_preference: string | null
           id: string
+          likes_count: number | null
           location_name: string | null
           references_urls: string
           responses_count: number | null
@@ -131,6 +245,7 @@ export type Database = {
           experience_level?: string | null
           gender_preference?: string | null
           id?: string
+          likes_count?: number | null
           location_name?: string | null
           references_urls?: string
           responses_count?: number | null
@@ -152,6 +267,7 @@ export type Database = {
           experience_level?: string | null
           gender_preference?: string | null
           id?: string
+          likes_count?: number | null
           location_name?: string | null
           references_urls?: string
           responses_count?: number | null
@@ -220,6 +336,52 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "hairdressers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      likes: {
+        Row: {
+          announcement_id: string | null
+          created_at: string
+          id: string
+          portfolio_id: string | null
+          user_id: string
+        }
+        Insert: {
+          announcement_id?: string | null
+          created_at?: string
+          id?: string
+          portfolio_id?: string | null
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string | null
+          created_at?: string
+          id?: string
+          portfolio_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "portfolios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -577,7 +739,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      mark_announcement_chat_read: {
+        Args: {
+          target_chat_id: string
+        }
+        Returns: undefined
+      }
+      finish_announcement_chat: {
+        Args: {
+          target_chat_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

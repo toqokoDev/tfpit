@@ -21,6 +21,13 @@ const portfolio = ref<PortfolioSchema | null>(null);
 const isLoading = ref(true);
 const userInfo = ref<UserInfo | null>(null);
 
+const {
+  likesCount,
+  hasLiked,
+  isLikeLoading,
+  toggleLike,
+} = useContentLike('portfolio', portfolioId, computed(() => portfolio.value?.likes_count || 0));
+
 // ---------------------
 // ----- Functions -----
 // ---------------------
@@ -147,105 +154,147 @@ useHead({
 </script>
 
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <div v-if="isLoading" class="flex items-center justify-center min-h-[60vh]">
-      <ui-spinner size="lg" />
-    </div>
-
-    <div v-else-if="!portfolio" class="flex flex-col items-center justify-center min-h-[60vh]">
-      <div class="text-center">
-        <p class="text-muted-foreground mb-4 text-lg">Портфолио не найдено или недоступно</p>
-        <ui-button @click="router.push('/')">
-          <ArrowLeft class="w-4 h-4 mr-2" />
-          Вернуться на главную
-        </ui-button>
-      </div>
-    </div>
-
-    <div v-else class="max-w-4xl mx-auto">
-      <div class="mb-6 flex items-center justify-between">
-        <ui-button variant="ghost" @click="router.back()">
-          <ArrowLeft class="w-4 h-4 mr-2" />
-          Назад
-        </ui-button>
-        
-        <ui-button @click="sharePortfolio" size="icon">
-          <share2 class="w-4 h-4" />
-        </ui-button>
+  <div class="min-h-screen bg-background text-foreground">
+    <div class="container mx-auto px-4 py-6 md:py-10">
+      <div v-if="isLoading" class="flex min-h-[60vh] items-center justify-center">
+        <ui-spinner size="lg" />
       </div>
 
-      <div class="space-y-6">
-        <div v-if="userInfo" class="flex items-center gap-4 pb-4 border-b">
-          <NuxtLink 
-            :to="`/profile/user/${userInfo.id}`"
-            class="flex items-center gap-4 hover:opacity-80 transition-opacity"
-          >
-            <div v-if="userInfo.avatar_url" class="w-12 h-12 rounded-full overflow-hidden">
-              <img :src="userInfo.avatar_url" :alt="`${userInfo.first_name} ${userInfo.last_name}`" class="w-full h-full object-cover" />
-            </div>
-            <div v-else class="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-              <span class="text-lg font-medium">{{ (userInfo.first_name?.[0] || '') + (userInfo.last_name?.[0] || '') }}</span>
-            </div>
-            <div>
-              <p class="font-medium">{{ userInfo.first_name }} {{ userInfo.last_name }}</p>
-              <p class="text-sm text-muted-foreground">Автор портфолио</p>
-            </div>
-          </NuxtLink>
+      <div v-else-if="!portfolio" class="flex min-h-[60vh] flex-col items-center justify-center">
+        <div class="rounded-3xl border bg-card p-8 text-center shadow-sm">
+          <p class="mb-4 text-lg text-muted-foreground">Портфолио не найдено или недоступно</p>
+          <ui-button @click="router.push('/')">
+            <ArrowLeft class="mr-2 h-4 w-4" />
+            Вернуться на главную
+          </ui-button>
         </div>
+      </div>
 
-        <div>
-          <h1 class="text-3xl font-bold mb-2">{{ portfolio.category }}</h1>
-          <p class="text-muted-foreground text-lg">{{ portfolio.description }}</p>
-        </div>
+      <div v-else class="mx-auto max-w-5xl">
+        <div class="mb-5 flex items-center justify-between">
+          <ui-button variant="ghost" class="rounded-full" @click="router.back()">
+            <ArrowLeft class="mr-2 h-4 w-4" />
+            Назад
+          </ui-button>
 
-        <div v-if="portfolio.image_url && portfolio.image_url.length > 0" class="space-y-4">
-          <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <chevron-left class="w-4 h-4" />
-            <span>Листайте свайпом</span>
-            <chevron-right class="w-4 h-4" />
+          <div class="flex items-center gap-2">
+            <ui-button size="icon" variant="outline" class="rounded-full" @click="sharePortfolio">
+              <Share2 class="h-4 w-4" />
+            </ui-button>
           </div>
+        </div>
 
-          <ui-carousel class="relative w-full max-w-2xl mx-auto"
-            :opts="{
-              align: 'center',
-            }"
-          >
-            <ui-carousel-content>
-              <ui-carousel-item v-for="img in portfolio.image_url" :key="img" class="basis-full">
-                <div class="p-1 flex justify-center">
-                  <img
-                    :src="img"
-                    :alt="portfolio.category"
-                    class="h-auto object-contain rounded-lg transition-opacity duration-300 max-w-full"
-                    loading="lazy"
-                  />
+        <article class="overflow-hidden rounded-[2rem] border bg-card shadow-xl shadow-black/5 lg:grid lg:grid-cols-[minmax(0,1.25fr)_380px]">
+          <header class="flex items-center justify-between border-b px-4 py-3 lg:col-span-2">
+            <BaseAuthorLink
+              v-if="userInfo"
+              :user="userInfo"
+              subtitle="Автор портфолио"
+              avatar-class="h-11 w-11"
+            />
+
+            <div class="flex items-center gap-2 rounded-full border px-3 py-1 text-xs text-muted-foreground">
+              <Globe class="h-3.5 w-3.5" />
+              <span>Публичное</span>
+            </div>
+          </header>
+
+          <section class="relative flex min-h-[420px] items-center justify-center bg-black lg:min-h-[680px]">
+            <div
+              v-if="portfolio.image_url && portfolio.image_url.length > 1"
+              class="absolute left-1/2 top-4 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/45 px-3 py-1 text-xs text-white backdrop-blur md:hidden"
+            >
+              <ChevronLeft class="h-3.5 w-3.5" />
+              <span>Листайте</span>
+              <ChevronRight class="h-3.5 w-3.5" />
+            </div>
+
+            <ui-carousel
+              v-if="portfolio.image_url && portfolio.image_url.length > 0"
+              class="relative h-full w-full"
+              :opts="{ align: 'center' }"
+            >
+              <ui-carousel-content class="h-full">
+                <ui-carousel-item v-for="img in portfolio.image_url" :key="img" class="basis-full">
+                  <div class="flex h-full min-h-[420px] items-center justify-center bg-black lg:min-h-[680px]">
+                    <img
+                      :src="img"
+                      :alt="portfolio.category"
+                      class="h-full min-h-[420px] w-full object-cover lg:min-h-[680px]"
+                      loading="lazy"
+                    />
+                  </div>
+                </ui-carousel-item>
+              </ui-carousel-content>
+              <ui-carousel-previous class="hidden bg-background/90 shadow-md md:flex left-4 z-30" />
+              <ui-carousel-next class="hidden bg-background/90 shadow-md md:flex right-4 z-30" />
+            </ui-carousel>
+
+            <div v-else class="flex h-full min-h-[420px] w-full flex-col items-center justify-center bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-800 px-8 text-center text-white lg:min-h-[680px]">
+              <p class="mb-3 rounded-full border border-white/20 px-4 py-1 text-xs uppercase tracking-[0.3em] text-white/70">Portfolio</p>
+              <h1 class="text-3xl font-bold md:text-5xl">{{ portfolio.category }}</h1>
+              <p class="mt-4 max-w-md text-sm text-white/60">Изображения для этого портфолио пока не добавлены.</p>
+            </div>
+          </section>
+
+          <aside class="flex flex-col border-t lg:border-l lg:border-t-0">
+            <div class="flex-1 space-y-5 px-5 py-5">
+              <div>
+                <h1 class="text-2xl font-bold leading-tight">{{ portfolio.category }}</h1>
+                <p v-if="portfolio.description" class="mt-3 text-sm leading-6 text-muted-foreground">
+                  {{ portfolio.description }}
+                </p>
+              </div>
+
+              <div class="grid gap-3 text-sm">
+                <div class="flex items-center justify-between rounded-2xl bg-muted/60 px-4 py-3">
+                  <span class="flex items-center gap-2 text-muted-foreground">
+                    <Eye class="h-4 w-4" />
+                    Просмотры
+                  </span>
+                  <span class="font-semibold">{{ portfolio.views_count }}</span>
                 </div>
-              </ui-carousel-item>
-            </ui-carousel-content>
-          </ui-carousel>
-        </div>
+                <div class="flex items-center justify-between rounded-2xl bg-muted/60 px-4 py-3">
+                  <span class="text-muted-foreground">Создано</span>
+                  <span class="text-right font-semibold">{{ formatDate(portfolio.created_at) }}</span>
+                </div>
+                <div v-if="portfolio.updated_at !== portfolio.created_at" class="flex items-center justify-between rounded-2xl bg-muted/60 px-4 py-3">
+                  <span class="text-muted-foreground">Обновлено</span>
+                  <span class="text-right font-semibold">{{ formatDate(portfolio.updated_at) }}</span>
+                </div>
+              </div>
+            </div>
 
-        <div class="flex flex-wrap gap-4 text-sm text-muted-foreground pt-4 border-t">
-          <div class="flex items-center gap-2">
-            <eye class="w-4 h-4" />
-            <span>{{ portfolio.views_count }} просмотров</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <heart class="w-4 h-4" />
-            <span>{{ portfolio.likes_count }} лайков</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <globe class="w-4 h-4" />
-            <span>Публичное</span>
-          </div>
-        </div>
+            <footer class="border-t px-5 py-4">
+              <div class="mb-3 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                  <ui-button
+                    variant="outline"
+                    :disabled="isLikeLoading"
+                    class="rounded-full gap-2"
+                    :aria-label="hasLiked ? 'Убрать лайк' : 'Поставить лайк'"
+                    @click="toggleLike"
+                  >
+                    <Heart
+                      class="h-4 w-4"
+                      :class="hasLiked ? 'text-rose-500' : ''"
+                      :fill="hasLiked ? 'currentColor' : 'none'"
+                    />
+                    {{ likesCount }}
+                  </ui-button>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Eye class="h-4 w-4" />
+                  <span>{{ portfolio.views_count }}</span>
+                </div>
+              </div>
 
-        <div class="text-sm text-muted-foreground">
-          <p>Создано: {{ formatDate(portfolio.created_at) }}</p>
-          <p v-if="portfolio.updated_at !== portfolio.created_at">
-            Обновлено: {{ formatDate(portfolio.updated_at) }}
-          </p>
-        </div>
+              <p class="mt-1 text-xs uppercase tracking-wide text-muted-foreground">
+                {{ formatDate(portfolio.created_at) }}
+              </p>
+            </footer>
+          </aside>
+        </article>
       </div>
     </div>
   </div>

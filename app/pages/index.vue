@@ -24,6 +24,7 @@ async function fetchAnnouncements() {
         location_name,
         experience_level,
         responses_count,
+        likes_count,
         views_count,
         created_at,
         shooting_date,
@@ -68,9 +69,6 @@ useHead({ title: 'Главная' });
 
       <section class="relative container mx-auto px-4 py-24 text-center lg:py-32">
         <div class="relative z-10">
-          <ui-badge variant="outline" class="mb-6 rounded-full px-4 py-1 text-sm font-normal">
-            ✨ Новые съемки каждый час
-          </ui-badge>
           <h1 class="mb-6 text-5xl font-extrabold tracking-tight lg:text-7xl">
             Твоё идеальное <br />
             <span class="text-primary">портфолио</span> начинается здесь
@@ -116,26 +114,11 @@ useHead({ title: 'Главная' });
         </div>
 
         <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <ui-card v-for="i in 3" :key="i" class="space-y-4">
-            <ui-card-header>
-              <ui-skeleton class="h-6 w-3/4" />
-              <ui-skeleton class="h-4 w-full mt-2" />
-              <ui-skeleton class="h-4 w-2/3 mt-2" />
-            </ui-card-header>
-            <ui-card-content class="space-y-3">
-              <div class="flex gap-2">
-                <ui-skeleton class="h-5 w-20" />
-                <ui-skeleton class="h-5 w-24" />
-              </div>
-              <ui-skeleton class="h-4 w-full" />
-              <ui-skeleton class="h-4 w-2/3" />
-              <div class="flex items-center gap-4 pt-2 border-t">
-                <ui-skeleton class="h-4 w-12" />
-                <ui-skeleton class="h-4 w-12" />
-                <ui-skeleton class="h-4 w-20 ml-auto" />
-              </div>
-            </ui-card-content>
-          </ui-card>
+          <offer-announcement-card
+            v-for="i in 3"
+            :key="i"
+            skeleton
+          />
         </div>
 
         <div v-else-if="announcements.length === 0" class="py-12">

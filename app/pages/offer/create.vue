@@ -5,6 +5,7 @@ import { Field as VeeField } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
 import { CalendarDate } from '@internationalized/date';
 import { X, Upload, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { cropImageFileToSquare, readFileAsDataUrl } from '../../utils/imageCrop';
 
 interface SelectOption {
   id: string;
@@ -66,7 +67,7 @@ onMounted(async () => {
   }
 });
 
-const handleImageSelect = (event: Event) => {
+const handleImageSelect = async (event: Event) => {
   const target = event.target as HTMLInputElement;
   const files = target.files;
   
@@ -84,18 +85,20 @@ const handleImageSelect = (event: Event) => {
     return true;
   });
 
-  validFiles.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        imageFiles.value.push({
-          url: e.target.result as string,
-          file: file
-        });
-      }
-    };
-    reader.readAsDataURL(file);
-  });
+  for (const file of validFiles) {
+    try {
+      const croppedFile = await cropImageFileToSquare(file);
+      const url = await readFileAsDataUrl(croppedFile);
+
+      imageFiles.value.push({
+        url,
+        file: croppedFile,
+      });
+    } catch (error) {
+      toast.error(`Не удалось обрезать ${file.name}`);
+      console.error('Ошибка обрезки изображения:', error);
+    }
+  }
 
   if (imageInput.value) {
     imageInput.value.value = '';
@@ -490,7 +493,7 @@ useHead({ title: 'Создать объявление' });
           <ui-card-header>
             <ui-card-title>Изображения (референсы)</ui-card-title>
             <ui-card-description>
-              Загрузите изображения для примера (макс. 5МБ на файл)
+              Загрузите изображения для примера (макс. 5МБ на файл). Перед сохранением они будут обрезаны в квадрат.
             </ui-card-description>
           </ui-card-header>
           <ui-card-content class="space-y-4">
@@ -515,15 +518,15 @@ useHead({ title: 'Создать объявление' });
             </ui-button>
 
             <div v-if="imageFiles.length > 0" class="space-y-4">
-              <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground md:hidden">
                 <chevron-left class="w-4 h-4" />
                 <span>Листайте свайпом</span>
                 <chevron-right class="w-4 h-4" />
               </div>
 
               <ui-carousel
-                class="w-full"
-                :opts="{ align: 'start' }"
+                class="relative w-full"
+                :opts="{ align: 'center' }"
               >
                 <ui-carousel-content>
                   <ui-carousel-item
@@ -531,8 +534,8 @@ useHead({ title: 'Создать объявление' });
                     :key="item.url"
                     class="basis-full md:basis-1/2 lg:basis-1/3"
                   >
-                    <div class="p-2 relative group">
-                      <div class="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
+                    <div class="p-2 relative group flex justify-center">
+                      <div class="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted flex items-center justify-center">
                         <img
                           :src="item.url"
                           :alt="`Preview ${index + 1}`"
@@ -549,6 +552,8 @@ useHead({ title: 'Создать объявление' });
                     </div>
                   </ui-carousel-item>
                 </ui-carousel-content>
+                <ui-carousel-previous class="hidden md:flex left-4 z-30 bg-background/90 shadow-md" />
+                <ui-carousel-next class="hidden md:flex right-4 z-30 bg-background/90 shadow-md" />
               </ui-carousel>
             </div>
           </ui-card-content>

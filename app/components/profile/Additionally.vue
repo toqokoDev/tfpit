@@ -3,10 +3,11 @@ import { toast } from "vue-sonner";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import { Field as VeeField } from "vee-validate";
-import { AlertCircleIcon } from 'lucide-vue-next';
+import { AlertCircleIcon } from "lucide-vue-next";
 import * as zod from "zod";
 
-type RoleTableName = 'models' | 'photographers' | 'hairdressers' | 'stylists';
+type RoleTableName = "models" | "photographers" | "hairdressers" | "stylists";
+type RoleFormValues = Record<string, unknown>;
 
 const supabase = useSupabaseClient<Database>();
 const currentUserStore = useCurrentUserStore();
@@ -15,15 +16,70 @@ const currentUser = computed(() => currentUserStore.getUser());
 const roles = ref<UserRoleSchema[]>([]);
 const selectedRoleId = ref<string | null>(null);
 const isFetching = ref<boolean>(true);
+const isRoleDataFetching = ref<boolean>(false);
 const isSaving = ref<boolean>(false);
-const roleData = ref<any>(null);
+const hasTriedSubmit = ref<boolean>(false);
+const formRenderKey = ref<number>(0);
+const roleData = ref<{ id: string } | null>(null);
+
+const arrayFieldsByTable: Record<RoleTableName, string[]> = {
+  models: ["clothing_sizes", "additional_info"],
+  photographers: ["lenses", "additional_info"],
+  hairdressers: ["equipment", "specialties", "additional_info"],
+  stylists: ["skills", "additional_info"],
+};
+
+const baseFormValues: Record<RoleTableName, RoleFormValues> = {
+  models: {
+    height: undefined,
+    weight: undefined,
+    bust: undefined,
+    waist: undefined,
+    hips: undefined,
+    shoe_size: undefined,
+    eye_color: "",
+    hair_color: "",
+    hair_length: "",
+    clothing_sizes: [],
+    has_tattoos: null,
+    has_piercings: null,
+    has_scars: null,
+    additional_info: [],
+  },
+  photographers: {
+    camera: "",
+    lenses: [],
+    additional_info: [],
+  },
+  hairdressers: {
+    equipment: [],
+    specialties: [],
+    additional_info: [],
+  },
+  stylists: {
+    skills: [],
+    additional_info: [],
+  },
+};
 
 const getTableNameByRole = (roleTitle: string): RoleTableName | null => {
   const titleLower = roleTitle.toLowerCase();
-  if (titleLower.includes('модель') || titleLower.includes('model')) return 'models';
-  if (titleLower.includes('фотограф') || titleLower.includes('photographer')) return 'photographers';
-  if (titleLower.includes('парикмахер') || titleLower.includes('hairdresser')) return 'hairdressers';
-  if (titleLower.includes('стилист') || titleLower.includes('stylist')) return 'stylists';
+  if (
+    titleLower.includes("модель") 
+    || titleLower.includes("model")
+  ) return "models";
+  if (titleLower.includes("фотограф") 
+    || titleLower.includes("photographer")
+  ) return "photographers";
+  if (
+    titleLower.includes("мастер по прическам") 
+    || titleLower.includes("hairdresser")
+  ) return "hairdressers";
+  if (
+    titleLower.includes("визажист")
+    || titleLower.includes("стилист")
+    || titleLower.includes("stylist")
+  ) return "stylists";
   return null;
 };
 
@@ -35,7 +91,7 @@ const currentTableName = computed(() => {
   return selectedRole.value ? getTableNameByRole(selectedRole.value.title) : null;
 });
 
-const { handleSubmit, setValues, resetForm, errors } = useForm({
+const { handleSubmit, resetForm, errors } = useForm({
   validationSchema: computed(() => {
     if (!selectedRole.value) return toTypedSchema(zod.object({}));
     const tableName = getTableNameByRole(selectedRole.value.title);
@@ -43,212 +99,220 @@ const { handleSubmit, setValues, resetForm, errors } = useForm({
   }),
 });
 
+const formErrorMessages = computed(() => {
+  if (!hasTriedSubmit.value) return [];
+
+  return Object.values(errors.value)
+    .filter((message): message is string => typeof message === "string" && message.length > 0);
+});
+
+function normalizeTags(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map(item => String(item).trim())
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map(item => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function joinTags(value: unknown): string | null {
+  const tags = normalizeTags(value);
+  return tags.length ? tags.join(", ") : null;
+}
+
+function getEmptyValues(tableName: RoleTableName): RoleFormValues {
+  return { ...baseFormValues[tableName] };
+}
+
+function getFormValues(tableName: RoleTableName, data: Record<string, unknown> | null): RoleFormValues {
+  const values = getEmptyValues(tableName);
+  if (!data) return values;
+
+  for (const key of Object.keys(values)) {
+    values[key] = data[key] ?? values[key];
+  }
+
+  for (const field of arrayFieldsByTable[tableName]) {
+    values[field] = normalizeTags(data[field]);
+  }
+
+  return values;
+}
+
+function getSavePayload(tableName: RoleTableName, values: RoleFormValues): RoleFormValues {
+  const payload: RoleFormValues = {};
+
+  for (const key of Object.keys(baseFormValues[tableName])) {
+    const value = values[key];
+    if (value !== undefined) {
+      payload[key] = value;
+    }
+  }
+
+  for (const field of arrayFieldsByTable[tableName]) {
+    payload[field] = tableName === "photographers"
+      ? joinTags(values[field])
+      : normalizeTags(values[field]);
+  }
+
+  return payload;
+}
+
+function sortRolesByTitleLength(roleList: UserRoleSchema[]): UserRoleSchema[] {
+  return [...roleList].sort((firstRole, secondRole) => {
+    const lengthDiff = firstRole.title.length - secondRole.title.length;
+    if (lengthDiff !== 0) return lengthDiff;
+
+    return firstRole.title.localeCompare(secondRole.title, "ru");
+  });
+}
+
+async function updateCurrentUserRole(role: UserRoleSchema) {
+  const { error } = await supabase
+    .from("users")
+    .update({ role: role.id })
+    .eq("id", currentUser.value.id);
+
+  if (error) throw error;
+
+  currentUserStore.updateUser({ role });
+}
+
+async function selectRole(roleId: string) {
+  if (selectedRoleId.value === roleId) return;
+
+  hasTriedSubmit.value = false;
+  resetForm({ values: {} });
+  roleData.value = null;
+  formRenderKey.value += 1;
+  selectedRoleId.value = roleId;
+  await loadRoleData();
+}
+
 async function getRoles() {
   try {
     isFetching.value = true;
     const { data, error } = await supabase
-      .from('roles')
-      .select('*');
+      .from("roles")
+      .select("*");
 
     if (error) throw error;
     
-    roles.value = data as UserRoleSchema[];
+    roles.value = sortRolesByTitleLength(data as UserRoleSchema[]);
     
-    if (currentUser.value.role?.id) {
-      selectedRoleId.value = currentUser.value.role.id;
+    selectedRoleId.value = currentUser.value.role?.id || roles.value[0]?.id || null;
+
+    if (selectedRoleId.value) {
       await loadRoleData();
     }
   } catch (error) {
     console.error(error);
-    toast.error('Не удалось загрузить роли');
+    toast.error("Не удалось загрузить роли");
   } finally {
     isFetching.value = false;
   }
 }
 
 async function loadRoleData() {
-  if (!selectedRoleId.value || !selectedRole.value) return;
+  hasTriedSubmit.value = false;
+
+  if (!selectedRoleId.value || !selectedRole.value) {
+    roleData.value = null;
+    isRoleDataFetching.value = false;
+    return;
+  }
   
   const tableName = getTableNameByRole(selectedRole.value.title);
-  if (!tableName) return;
+  if (!tableName) {
+    roleData.value = null;
+    resetForm({ values: {} }, { force: true });
+    formRenderKey.value += 1;
+    isRoleDataFetching.value = false;
+    return;
+  }
 
   try {
+    isRoleDataFetching.value = true;
     const { data, error } = await supabase
-      .from(tableName as 'models' | 'photographers' | 'hairdressers' | 'stylists')
-      .select('*')
-      .eq('user_id', currentUser.value.id)
+      .from(tableName)
+      .select("*")
+      .eq("user_id", currentUser.value.id)
       .maybeSingle();
 
     if (error) throw error;
     
     roleData.value = data;
-    
-    if (data) {
-      const formData: any = { ...data };
-      // Преобразуем строки из БД (через запятую) в массивы для tags-input
-      if (formData.clothing_sizes) {
-        formData.clothing_sizes = Array.isArray(formData.clothing_sizes) 
-          ? formData.clothing_sizes 
-          : (typeof formData.clothing_sizes === 'string' 
-            ? formData.clothing_sizes.split(',').map((s: string) => s.trim()).filter(Boolean)
-            : []);
-      } else {
-        formData.clothing_sizes = [];
-      }
-      
-      if (formData.lenses) {
-        formData.lenses = Array.isArray(formData.lenses)
-          ? formData.lenses
-          : (typeof formData.lenses === 'string'
-            ? formData.lenses.split(',').map((s: string) => s.trim()).filter(Boolean)
-            : []);
-      } else {
-        formData.lenses = [];
-      }
-      
-      if (formData.equipment) {
-        formData.equipment = Array.isArray(formData.equipment)
-          ? formData.equipment
-          : (typeof formData.equipment === 'string'
-            ? formData.equipment.split(',').map((s: string) => s.trim()).filter(Boolean)
-            : []);
-      } else {
-        formData.equipment = [];
-      }
-      
-      if (formData.specialties) {
-        formData.specialties = Array.isArray(formData.specialties)
-          ? formData.specialties
-          : (typeof formData.specialties === 'string'
-            ? formData.specialties.split(',').map((s: string) => s.trim()).filter(Boolean)
-            : []);
-      } else {
-        formData.specialties = [];
-      }
-      
-      if (formData.skills) {
-        formData.skills = Array.isArray(formData.skills)
-          ? formData.skills
-          : (typeof formData.skills === 'string'
-            ? formData.skills.split(',').map((s: string) => s.trim()).filter(Boolean)
-            : []);
-      } else {
-        formData.skills = [];
-      }
-      
-      if (formData.additional_info) {
-        formData.additional_info = Array.isArray(formData.additional_info)
-          ? formData.additional_info
-          : (typeof formData.additional_info === 'string'
-            ? formData.additional_info.split(',').map((s: string) => s.trim()).filter(Boolean)
-            : []);
-      } else {
-        formData.additional_info = [];
-      }
-      
-      setValues(formData);
-    } else {
-      resetForm();
-    }
+    resetForm({ values: getFormValues(tableName, data) }, { force: true });
+    formRenderKey.value += 1;
   } catch (error) {
-    console.error('Ошибка загрузки данных роли:', error);
-    toast.error('Не удалось загрузить данные роли');
+    console.error("Ошибка загрузки данных роли:", error);
+    toast.error("Не удалось загрузить данные роли");
+  } finally {
+    isRoleDataFetching.value = false;
   }
 }
 
-watch(selectedRoleId, async () => {
-  if (selectedRoleId.value) {
-    await loadRoleData();
-  }
-});
-
 const saveRoleData = handleSubmit(
   async (values) => {
-    console.log('saveRoleData called with values:', values);
-    
+    hasTriedSubmit.value = true;
+
     if (!selectedRoleId.value || !selectedRole.value) {
-      console.error('No role selected');
+      toast.error("Выберите роль");
       return;
     }
     
     const tableName = getTableNameByRole(selectedRole.value.title);
     if (!tableName) {
-      console.error('No table name found for role:', selectedRole.value.title);
+      toast.error("Для выбранной роли нет дополнительных полей");
       return;
     }
 
     try {
       isSaving.value = true;
-      
-      const dataToSave: any = { ...values };
-      
-      // Преобразуем числовые поля из строк в числа
-      if (dataToSave.height !== undefined) dataToSave.height = Number(dataToSave.height);
-      if (dataToSave.weight !== undefined) dataToSave.weight = Number(dataToSave.weight);
-      if (dataToSave.bust !== undefined) dataToSave.bust = Number(dataToSave.bust);
-      if (dataToSave.waist !== undefined) dataToSave.waist = Number(dataToSave.waist);
-      if (dataToSave.hips !== undefined) dataToSave.hips = Number(dataToSave.hips);
-      if (dataToSave.shoe_size !== undefined) dataToSave.shoe_size = Number(dataToSave.shoe_size);
-      
-      // Преобразуем массивы из tags-input в строки через запятую для БД
-      if (Array.isArray(dataToSave.clothing_sizes)) {
-        const filtered = dataToSave.clothing_sizes.filter(Boolean);
-        dataToSave.clothing_sizes = filtered.length > 0 ? filtered.join(',') : null;
-      }
-      if (Array.isArray(dataToSave.lenses)) {
-        const filtered = dataToSave.lenses.filter(Boolean);
-        dataToSave.lenses = filtered.length > 0 ? filtered.join(',') : null;
-      }
-      if (Array.isArray(dataToSave.equipment)) {
-        const filtered = dataToSave.equipment.filter(Boolean);
-        dataToSave.equipment = filtered.length > 0 ? filtered.join(',') : null;
-      }
-      if (Array.isArray(dataToSave.specialties)) {
-        const filtered = dataToSave.specialties.filter(Boolean);
-        dataToSave.specialties = filtered.length > 0 ? filtered.join(',') : null;
-      }
-      if (Array.isArray(dataToSave.skills)) {
-        const filtered = dataToSave.skills.filter(Boolean);
-        dataToSave.skills = filtered.length > 0 ? filtered.join(',') : null;
-      }
-      if (Array.isArray(dataToSave.additional_info)) {
-        const filtered = dataToSave.additional_info.filter(Boolean);
-        dataToSave.additional_info = filtered.length > 0 ? filtered.join(',') : null;
-      }
-      
-      console.log('Data to save:', dataToSave);
+      const dataToSave = getSavePayload(tableName, values);
 
-    if (roleData.value?.id) {
-      const { error } = await supabase
-        .from(tableName as 'models' | 'photographers' | 'hairdressers' | 'stylists')
-        .update(dataToSave)
-        .eq('id', roleData.value.id);
-      
-      if (error) throw error;
-    } else {
-      const { error } = await supabase
-        .from(tableName as 'models' | 'photographers' | 'hairdressers' | 'stylists')
-        .insert({
-          ...dataToSave,
-          user_id: currentUser.value.id,
-        });
-      
-      if (error) throw error;
-    }
+      if (roleData.value?.id) {
+        const { error } = await supabase
+          .from(tableName)
+          .update(dataToSave)
+          .eq("id", roleData.value.id);
+        
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from(tableName)
+          .insert({
+            ...dataToSave,
+            user_id: currentUser.value.id,
+          });
+        
+        if (error) throw error;
+      }
 
-      toast.success('Данные успешно сохранены');
+      await updateCurrentUserRole(selectedRole.value);
+
+      toast.success("Данные успешно сохранены");
       await loadRoleData();
     } catch (error: any) {
-      console.error('Ошибка сохранения данных роли:', error);
-      toast.error(error.message || 'Не удалось сохранить данные');
+      console.error("Ошибка сохранения данных роли:", error);
+      toast.error(error.message || "Не удалось сохранить данные");
     } finally {
       isSaving.value = false;
     }
   },
   (errors) => {
-    console.error('Validation errors:', errors);
-    toast.error('Пожалуйста, заполните все обязательные поля');
-  }
+    hasTriedSubmit.value = true;
+    console.error("Validation errors:", errors);
+    toast.error("Пожалуйста, заполните все обязательные поля");
+  },
 );
 
 onMounted(() => {
@@ -256,25 +320,25 @@ onMounted(() => {
 });
 
 const hairLengthOptions = [
-  { value: 'короткие', label: 'Короткие' },
-  { value: 'средние', label: 'Средние' },
-  { value: 'длинные', label: 'Длинные' },
+  { value: "короткие", label: "Короткие" },
+  { value: "средние", label: "Средние" },
+  { value: "длинные", label: "Длинные" },
 ];
 
 const eyeColorOptions = [
-  { value: 'карие', label: 'Карие' },
-  { value: 'голубые', label: 'Голубые' },
-  { value: 'зеленые', label: 'Зеленые' },
-  { value: 'серые', label: 'Серые' },
-  { value: 'черные', label: 'Черные' },
+  { value: "карие", label: "Карие" },
+  { value: "голубые", label: "Голубые" },
+  { value: "зеленые", label: "Зеленые" },
+  { value: "серые", label: "Серые" },
+  { value: "черные", label: "Черные" },
 ];
 
 const hairColorOptions = [
-  { value: 'черные', label: 'Черные' },
-  { value: 'каштановые', label: 'Каштановые' },
-  { value: 'русые', label: 'Русые' },
-  { value: 'блонд', label: 'Блонд' },
-  { value: 'рыжие', label: 'Рыжие' },
+  { value: "черные", label: "Черные" },
+  { value: "каштановые", label: "Каштановые" },
+  { value: "русые", label: "Русые" },
+  { value: "блонд", label: "Блонд" },
+  { value: "рыжие", label: "Рыжие" },
 ];
 </script>
 
@@ -292,7 +356,8 @@ const hairColorOptions = [
             v-for="role in roles"
             :key="role.id"
             :variant="selectedRoleId === role.id ? 'default' : 'outline'"
-            @click="selectedRoleId = role.id"
+            :disabled="isRoleDataFetching || isSaving"
+            @click="selectRole(role.id)"
             class="flex-1 min-w-[120px]"
           >
             {{ role.title }}
@@ -300,16 +365,33 @@ const hairColorOptions = [
         </div>
       </div>
 
-      <form v-if="selectedRole && currentTableName" @submit.prevent="saveRoleData" class="space-y-4">
+      <div v-if="isRoleDataFetching" class="flex justify-center border-t py-8">
+        <ui-spinner />
+      </div>
+
+      <form
+        v-else-if="selectedRole && currentTableName"
+        :key="formRenderKey"
+        @submit.prevent="saveRoleData"
+        class="space-y-4"
+      >
         <div class="border-t pt-4">
           <ui-alert
-            v-if="Object.keys(errors).length > 0"
+            v-if="formErrorMessages.length > 0"
             variant="destructive"
             class="mb-4"
           >
             <alert-circle-icon />
             <ui-alert-title class="font-normal">
               <p>Пожалуйста, исправьте ошибки в форме</p>
+              <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+                <li
+                  v-for="message in formErrorMessages"
+                  :key="message"
+                >
+                  {{ message }}
+                </li>
+              </ul>
             </ui-alert-title>
           </ui-alert>
           

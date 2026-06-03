@@ -8,7 +8,7 @@ useHead({ title: 'Профиль' });
 </script>
 
 <template>
-  <div class="flex items-center justify-center min-h-[calc(100vh-80px)] bg-muted/40 p-4">
+  <div class="flex items-start justify-center min-h-[calc(100vh-80px)] bg-muted/40 p-4">
     <ui-card class="w-full max-w-4xl overflow-hidden">
       <ui-tabs v-model="activeTab" class="flex flex-col md:flex-row">
         

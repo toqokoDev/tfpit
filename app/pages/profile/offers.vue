@@ -37,6 +37,7 @@ async function loadAnnouncements() {
         status,
         experience_level,
         responses_count,
+        likes_count,
         views_count,
         created_at,
         shooting_date,
@@ -90,25 +91,6 @@ async function deleteAnnouncement() {
   }
 }
 
-function formatDate(dateString: string | null) {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-function getImageUrl(references_urls: string | string[] | null): string {
-  if (!references_urls) return '';
-  if (typeof references_urls === 'string') {
-    const urls = references_urls.split(';').filter(url => url.trim());
-    return urls[0] || '';
-  }
-  return Array.isArray(references_urls) ? references_urls[0] || '' : '';
-}
-
 onMounted(() => {
   loadAnnouncements();
 });
@@ -141,26 +123,11 @@ useHead({ title: 'Мои объявления' });
     </div>
 
     <div v-if="isLoading" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      <ui-card v-for="i in 6" :key="i" class="space-y-4">
-        <ui-card-header>
-          <ui-skeleton class="h-6 w-3/4" />
-          <ui-skeleton class="h-4 w-full mt-2" />
-          <ui-skeleton class="h-4 w-2/3 mt-2" />
-        </ui-card-header>
-        <ui-card-content class="space-y-3">
-          <div class="flex gap-2">
-            <ui-skeleton class="h-5 w-20" />
-            <ui-skeleton class="h-5 w-24" />
-          </div>
-          <ui-skeleton class="h-4 w-full" />
-          <ui-skeleton class="h-4 w-2/3" />
-          <div class="flex items-center gap-4 pt-2 border-t">
-            <ui-skeleton class="h-4 w-12" />
-            <ui-skeleton class="h-4 w-12" />
-            <ui-skeleton class="h-4 w-20 ml-auto" />
-          </div>
-        </ui-card-content>
-      </ui-card>
+      <offer-announcement-card
+        v-for="i in 6"
+        :key="i"
+        skeleton
+      />
     </div>
 
     <div v-else-if="announcements.length === 0" class="flex justify-center py-12">
@@ -178,79 +145,43 @@ useHead({ title: 'Мои объявления' });
     </div>
 
     <div v-else class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      <ui-card
+      <div
         v-for="announcement in announcements"
         :key="announcement.id"
-        class="relative hover:shadow-lg transition-shadow overflow-hidden pt-0"
+        class="relative"
       >
-        <div v-if="getImageUrl(announcement.references_urls)" class="relative w-full aspect-video overflow-hidden bg-muted">
-          <img
-            :src="getImageUrl(announcement.references_urls)"
-            :alt="announcement.title"
-            class="w-full h-full object-cover"
-          />
+        <offer-announcement-card :announcement="announcement" />
+
+        <div class="absolute right-3 top-3 z-20 flex gap-1 rounded-full bg-background/90 p-1 shadow-sm backdrop-blur">
+          <ui-button
+            variant="ghost"
+            size="icon"
+            class="h-8 w-8"
+            @click.stop="router.push(`/offer/${announcement.id}`)"
+          >
+            <Eye class="w-4 h-4" />
+            <span class="sr-only">Открыть объявление</span>
+          </ui-button>
+          <ui-button
+            variant="ghost"
+            size="icon"
+            class="h-8 w-8"
+            @click.stop="router.push(`/offer/edit/${announcement.id}`)"
+          >
+            <Pencil class="w-4 h-4" />
+            <span class="sr-only">Редактировать объявление</span>
+          </ui-button>
+          <ui-button
+            variant="ghost"
+            size="icon"
+            class="h-8 w-8 text-destructive hover:text-destructive"
+            @click.stop="openDeleteDialog(announcement.id)"
+          >
+            <Trash2 class="w-4 h-4" />
+            <span class="sr-only">Удалить объявление</span>
+          </ui-button>
         </div>
-        
-        <ui-card-header>
-          <div class="flex items-start justify-between gap-2">
-            <ui-card-title>{{ announcement.title }}</ui-card-title>
-            <div class="flex gap-1 flex-shrink-0">
-              <ui-button
-                variant="ghost"
-                size="icon"
-                @click.stop="router.push(`/offer/${announcement.id}`)"
-              >
-                <Eye class="w-4 h-4" />
-              </ui-button>
-              <ui-button
-                variant="ghost"
-                size="icon"
-                @click.stop="router.push(`/offer/edit/${announcement.id}`)"
-              >
-                <Pencil class="w-4 h-4" />
-              </ui-button>
-              <ui-button
-                variant="ghost"
-                size="icon"
-                class="text-destructive hover:text-destructive"
-                @click.stop="openDeleteDialog(announcement.id)"
-              >
-                <Trash2 class="w-4 h-4" />
-              </ui-button>
-            </div>
-          </div>
-          <ui-card-description class="line-clamp-2 mt-2">
-            {{ announcement.description }}
-          </ui-card-description>
-        </ui-card-header>
-
-        <ui-card-content class="space-y-3">
-          <div class="flex gap-2 text-sm items-center text-muted-foreground">
-            <div v-if="announcement.city" class="flex items-center gap-2">
-              {{ announcement.city }}
-            </div>
-            <div v-if="announcement.role" class="flex items-center gap-2">
-              <span v-if="announcement.city"> • </span>
-              {{ announcement.role.title }}
-            </div>
-          </div>
-
-          <div class="flex items-center gap-4 pt-2 border-t text-sm text-muted-foreground">
-            <div class="flex items-center gap-1">
-              <Eye class="h-4 w-4" />
-              {{ announcement.views_count || 0 }}
-            </div>
-            <div v-if="announcement.status" class="flex items-center gap-1">
-              <span :class="announcement.status === 'open' ? 'text-green-600' : 'text-muted-foreground'">
-                {{ announcement.status === 'open' ? 'Открыто' : 'Закрыто' }}
-              </span>
-            </div>
-            <div class="ml-auto text-xs">
-              {{ formatDate(announcement.created_at) }}
-            </div>
-          </div>
-        </ui-card-content>
-      </ui-card>
+      </div>
     </div>
 
     <ui-dialog :open="isDeleteDialogOpen" @update:open="isDeleteDialogOpen = $event">

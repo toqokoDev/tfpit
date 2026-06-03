@@ -37,9 +37,9 @@ export const portfolioCreateSchema = zod
       .min(1, 'Категория обязательна')
       .max(100, 'Категория слишком длинная'),
     
-    description: zod.string({ required_error: 'Введите описание' })
-      .min(1, 'Описание обязательно')
-      .max(1000, 'Описание слишком длинное'),
+    description: zod.string()
+      .max(1000, 'Описание слишком длинное')
+      .default(''),
     
     is_public: zod.boolean().default(false),
   })

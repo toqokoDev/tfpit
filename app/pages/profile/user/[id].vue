@@ -12,6 +12,7 @@ const user = ref<any>(null);
 const portfolios = ref<PortfolioSchema[]>([]);
 const isLoadingPortfolios = ref(false);
 const activeTab = ref('profile');
+const selectedPortfolioImage = ref<{ portfolioId: string; imageIndex: number } | null>(null);
 
 const initials = computed(() => {
   if (!user.value) return '?';
@@ -30,6 +31,14 @@ const getExperienceLevel = (level: number) => {
   if (level < 3) return 'Начинающий';
   if (level >= 3 && level < 10) return 'Любитель';
   return 'Профессионал';
+};
+
+const getPortfolioImageZIndex = (portfolioId: string, imageIndex: number, imageCount: number) => {
+  if (selectedPortfolioImage.value?.portfolioId !== portfolioId) {
+    return imageCount - imageIndex;
+  }
+
+  return 10 - Math.abs(selectedPortfolioImage.value.imageIndex - imageIndex);
 };
 
 const fetchUser = async () => {
@@ -289,15 +298,15 @@ onMounted(async () => {
             </div>
             
             <div v-else class="space-y-4">
-              <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <div class="flex items-center justify-center gap-2 text-sm text-muted-foreground md:hidden">
                 <chevron-left class="w-4 h-4" />
                 <span>Листайте свайпом</span>
                 <chevron-right class="w-4 h-4" />
               </div>
               
-              <ui-carousel class="w-full"
+              <ui-carousel class="relative w-full"
                 :opts="{
-                  align: 'start',
+                  align: 'center',
                 }"
               >
                 <ui-carousel-content>
@@ -306,21 +315,38 @@ onMounted(async () => {
                     :key="portfolio.id" 
                     class="basis-full md:basis-1/2 lg:basis-1/2"
                   >
-                    <div class="p-2">
-                      <div class="rounded-lg border overflow-hidden bg-card">
-                        <div class="aspect-video w-full overflow-hidden bg-muted">
-                          <img
-                            v-if="portfolio.image_url && portfolio.image_url.length > 0"
-                            :src="portfolio.image_url[0]"
-                            :alt="portfolio.category"
-                            class="h-full w-full object-cover"
-                            loading="lazy"
-                          />
+                    <div class="p-2 flex justify-center">
+                      <div class="w-full overflow-hidden rounded-lg border bg-card">
+                        <div
+                          v-if="portfolio.image_url && portfolio.image_url.length > 0"
+                          class="flex justify-center overflow-hidden bg-card px-2 py-3"
+                        >
+                          <div
+                            v-for="(imageUrl, imageIndex) in portfolio.image_url.slice(0, 3)"
+                            :key="imageUrl"
+                            class="h-40 shrink-0 overflow-hidden rounded-xl bg-muted shadow-lg transition-transform duration-300 first:ml-0 hover:z-10 hover:-translate-y-1"
+                            :class="{
+                              'w-[94%]': portfolio.image_url.slice(0, 3).length === 1,
+                              '-ml-[16%] w-[55%]': portfolio.image_url.slice(0, 3).length === 2,
+                              '-ml-[16%] w-[42%]': portfolio.image_url.slice(0, 3).length >= 3,
+                            }"
+                            :style="{ zIndex: getPortfolioImageZIndex(portfolio.id, imageIndex, portfolio.image_url.slice(0, 3).length) }"
+                            @mouseenter="selectedPortfolioImage = { portfolioId: portfolio.id, imageIndex }"
+                          >
+                            <img
+                              :src="imageUrl"
+                              :alt="`${portfolio.category} ${imageIndex + 1}`"
+                              class="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                              loading="lazy"
+                            />
+                          </div>
                         </div>
+                        <div v-else class="aspect-video w-full bg-muted" />
+                        
                         <div class="p-4 space-y-3">
                           <div>
                             <h3 class="font-semibold text-lg mb-1">{{ portfolio.category }}</h3>
-                            <p class="text-sm text-muted-foreground line-clamp-2">
+                            <p v-if="portfolio.description" class="text-sm text-muted-foreground line-clamp-2">
                               {{ portfolio.description }}
                             </p>
                           </div>
@@ -336,6 +362,8 @@ onMounted(async () => {
                     </div>
                   </ui-carousel-item>
                 </ui-carousel-content>
+                <ui-carousel-previous class="hidden md:flex left-4 z-30 bg-background/90 shadow-md" />
+                <ui-carousel-next class="hidden md:flex right-4 z-30 bg-background/90 shadow-md" />
               </ui-carousel>
             </div>
           </ui-tabs-content>

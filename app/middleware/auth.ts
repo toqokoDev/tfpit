@@ -1,11 +1,5 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  // Check if user is already exist
-  
   const currentUserStore = useCurrentUserStore();
-
-  if (currentUserStore.isExist()) {
-    return;
-  }
 
   // Fetch auth user
 
@@ -13,10 +7,17 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
 
   if (authError || authUser === null) {
+    currentUserStore.clearUser();
     await supabase.auth.signOut();
 
     return navigateTo('/auth/login');
   }
+
+  if (currentUserStore.user?.id === authUser.id) {
+    return;
+  }
+
+  currentUserStore.clearUser();
 
   // Fetch user data
 

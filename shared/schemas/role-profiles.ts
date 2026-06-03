@@ -1,5 +1,24 @@
 import * as zod from "zod";
 
+const requiredNumber = (
+  message: string,
+  min: number,
+  minMessage: string,
+  max: number,
+  maxMessage: string,
+) => zod.preprocess(
+  (value) => {
+    if (value === '' || value === null || value === undefined) {
+      return undefined;
+    }
+
+    return Number(value);
+  },
+  zod.number({ required_error: message, invalid_type_error: message })
+    .min(min, minMessage)
+    .max(max, maxMessage),
+);
+
 // -------------------------
 // ----- Model Profile ----
 // -------------------------
@@ -9,29 +28,53 @@ import * as zod from "zod";
  */
 export const modelProfileSchema = zod
   .object({
-    height: zod.number({ required_error: 'Введите рост' })
-      .min(100, 'Рост должен быть не менее 100 см')
-      .max(250, 'Рост должен быть не более 250 см'),
+    height: requiredNumber(
+      'Введите рост',
+      100,
+      'Рост должен быть не менее 100 см',
+      250,
+      'Рост должен быть не более 250 см',
+    ),
     
-    weight: zod.number({ required_error: 'Введите вес' })
-      .min(30, 'Вес должен быть не менее 30 кг')
-      .max(200, 'Вес должен быть не более 200 кг'),
+    weight: requiredNumber(
+      'Введите вес',
+      30,
+      'Вес должен быть не менее 30 кг',
+      200,
+      'Вес должен быть не более 200 кг',
+    ),
     
-    bust: zod.number({ required_error: 'Введите обхват груди' })
-      .min(60, 'Обхват груди должен быть не менее 60 см')
-      .max(150, 'Обхват груди должен быть не более 150 см'),
+    bust: requiredNumber(
+      'Введите обхват груди',
+      60,
+      'Обхват груди должен быть не менее 60 см',
+      150,
+      'Обхват груди должен быть не более 150 см',
+    ),
     
-    waist: zod.number({ required_error: 'Введите обхват талии' })
-      .min(50, 'Обхват талии должен быть не менее 50 см')
-      .max(150, 'Обхват талии должен быть не более 150 см'),
+    waist: requiredNumber(
+      'Введите обхват талии',
+      50,
+      'Обхват талии должен быть не менее 50 см',
+      150,
+      'Обхват талии должен быть не более 150 см',
+    ),
     
-    hips: zod.number({ required_error: 'Введите обхват бедер' })
-      .min(60, 'Обхват бедер должен быть не менее 60 см')
-      .max(150, 'Обхват бедер должен быть не более 150 см'),
+    hips: requiredNumber(
+      'Введите обхват бедер',
+      60,
+      'Обхват бедер должен быть не менее 60 см',
+      150,
+      'Обхват бедер должен быть не более 150 см',
+    ),
     
-    shoe_size: zod.number({ required_error: 'Введите размер обуви' })
-      .min(30, 'Размер обуви должен быть не менее 30')
-      .max(50, 'Размер обуви должен быть не более 50'),
+    shoe_size: requiredNumber(
+      'Введите размер обуви',
+      30,
+      'Размер обуви должен быть не менее 30',
+      50,
+      'Размер обуви должен быть не более 50',
+    ),
     
     eye_color: zod.string({ required_error: 'Выберите цвет глаз' })
       .min(1, 'Цвет глаз обязателен'),

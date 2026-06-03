@@ -8,6 +8,7 @@ import { AlertCircleIcon } from "lucide-vue-next";
 // ----------------
 
 const supabase = useSupabaseClient<Database>();
+const currentUserStore = useCurrentUserStore();
 
 const isLoginProcessing = ref<boolean>(false);
 const loginErrorMessageKey = ref<string | null>(null);
@@ -56,6 +57,9 @@ const login = handleSubmit(async (values) => {
 
       throw loginError;
     }
+
+    currentUserStore.clearUser();
+    clearNuxtData('init-user');
 
     return navigateTo('/profile');
   } catch (error) {
