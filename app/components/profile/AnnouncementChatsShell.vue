@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Inbox, MessageCircle } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
-import type { AnnouncementChat, ChatMessage, ChatStatus, ChatTab } from '../../types/announcementChats';
+import type { AnnouncementChat, ChatMessage, ChatStatus, ChatTab, UserReview } from '../../types/announcementChats';
 
 const props = defineProps<{
   selectedChatId?: string | null;
@@ -28,10 +28,12 @@ const loadingTabs = reactive<Record<ChatTab, boolean>>({
   archive: false,
 });
 const messages = ref<ChatMessage[]>([]);
+const chatReviews = ref<UserReview[]>([]);
 const currentUserId = ref<string | null>(null);
 const selectedChatId = ref<string | null>(props.selectedChatId || null);
 const activeTab = ref<ChatTab>('requests');
 const isLoadingMessages = ref(false);
+const isLoadingChatReviews = ref(false);
 const isActionLoading = ref(false);
 const isSending = ref(false);
 const isFinishDialogOpen = ref(false);
@@ -245,6 +247,43 @@ function upsertChat(chat: AnnouncementChat) {
     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 }
 
+function shouldShowChatReviews(chat: AnnouncementChat | null) {
+  if (!chat) return false;
+  return chat.status === 'archived' || hasUserFinished(chat, currentUserId.value);
+}
+
+async function loadChatReviews() {
+  chatReviews.value = [];
+
+  if (!selectedChatId.value || !shouldShowChatReviews(selectedChat.value)) return;
+
+  try {
+    isLoadingChatReviews.value = true;
+
+    const { data, error } = await supabase
+      .from('announcement_chat_reviews')
+      .select(`
+        id,
+        chat_id,
+        reviewer_id,
+        reviewed_user_id,
+        rating,
+        comment,
+        created_at,
+        reviewer:users!announcement_chat_reviews_reviewer_id_fkey(id, first_name, last_name, avatar_url)
+      `)
+      .eq('chat_id', selectedChatId.value);
+
+    if (error) throw error;
+
+    chatReviews.value = (data || []) as unknown as UserReview[];
+  } catch (error: any) {
+    console.error('Ошибка загрузки отзывов чата:', error);
+  } finally {
+    isLoadingChatReviews.value = false;
+  }
+}
+
 async function loadMessages() {
   if (!selectedChatId.value) {
     messages.value = [];
@@ -435,6 +474,7 @@ async function openChat(chatId: string) {
   window.history.pushState({}, '', `/profile/chats/${chatId}`);
   syncActiveTabWithSelectedChat();
   await loadMessages();
+  await loadChatReviews();
   await markSelectedChatRead();
   await subscribeToSelectedChatMessages();
 }
@@ -442,6 +482,7 @@ async function openChat(chatId: string) {
 async function closeChat() {
   selectedChatId.value = null;
   messages.value = [];
+  chatReviews.value = [];
   window.history.pushState({}, '', '/profile/chats');
   await unsubscribeMessagesChannel();
 }
@@ -534,6 +575,7 @@ async function completeChatWithReview(payload: { rating: number | null; comment:
     upsertChat(applyFinishToChat(selectedChat.value));
     syncActiveTabWithSelectedChat();
     isFinishDialogOpen.value = false;
+    await loadChatReviews();
 
     if (finishDialogMode.value === 'review') {
       toast.success(payload.rating !== null ? 'Отзыв отправлен. Чат перенесён в архив.' : 'Чат перенесён в архив');
@@ -583,6 +625,7 @@ watch(() => props.selectedChatId, async (newChatId) => {
   await ensureSelectedChatLoaded();
   syncActiveTabWithSelectedChat();
   await loadMessages();
+  await loadChatReviews();
   await markSelectedChatRead();
   await subscribeToSelectedChatMessages();
 });
@@ -604,6 +647,7 @@ onMounted(async () => {
   }
   await subscribeToUserChats();
   await loadMessages();
+  await loadChatReviews();
   await markSelectedChatRead();
   await subscribeToSelectedChatMessages();
 });
@@ -761,6 +805,9 @@ onUnmounted(() => {
           :is-unread="isChatUnread(selectedChat)"
           :pending-review="selectedChatPendingReview"
           :current-user-finished="selectedChatCurrentUserFinished"
+          :show-reviews="shouldShowChatReviews(selectedChat)"
+          :reviews="chatReviews"
+          :is-loading-reviews="isLoadingChatReviews"
           @back="closeChat"
           @update-status="updateChatStatus"
           @finish-chat="openFinishDialog"

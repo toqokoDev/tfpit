@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ArrowDown, ArrowLeft, Check, Send, X } from 'lucide-vue-next';
-import type { AnnouncementChat, ChatMessage, ChatStatus, ChatUser } from '../../types/announcementChats';
+import type { AnnouncementChat, ChatMessage, ChatStatus, ChatUser, UserReview } from '../../types/announcementChats';
 
 const props = defineProps<{
   chat: AnnouncementChat;
@@ -12,6 +12,9 @@ const props = defineProps<{
   isUnread: boolean;
   pendingReview: boolean;
   currentUserFinished: boolean;
+  showReviews: boolean;
+  reviews: UserReview[];
+  isLoadingReviews: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -254,6 +257,14 @@ watch(newMessage, async () => {
           :created-at="message.created_at"
           :sender-id="message.sender_id"
           :current-user-id="currentUserId"
+        />
+
+        <profile-chat-archive-reviews
+          v-if="showReviews"
+          :reviews="reviews"
+          :is-loading="isLoadingReviews"
+          :current-user-id="currentUserId"
+          :companion-name="companionName"
         />
       </template>
     </div>
