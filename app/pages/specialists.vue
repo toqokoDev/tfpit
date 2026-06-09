@@ -25,11 +25,14 @@ interface Specialist {
   experience_level: number | null;
   role: SelectOption | null;
   portfolio_previews: PortfolioPreview[];
+  role_data?: Record<string, unknown> | null;
 }
 
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient<Database>();
+const authUser = useSupabaseUser();
+const { fetchRoleProfilesForUsers } = useRoleProfileData();
 
 const ITEMS_PER_PAGE = 12;
 
@@ -196,9 +199,14 @@ async function fetchSpecialists() {
       }
     }
 
+    const roleDataByUser = authUser.value
+      ? await fetchRoleProfilesForUsers(specialistsData)
+      : new Map<string, Record<string, unknown>>();
+
     specialists.value = specialistsData.map(specialist => ({
       ...specialist,
       portfolio_previews: portfolioByUser.get(specialist.id) || [],
+      role_data: roleDataByUser.get(specialist.id) || null,
     }));
     totalCount.value = count || 0;
   } catch (error) {

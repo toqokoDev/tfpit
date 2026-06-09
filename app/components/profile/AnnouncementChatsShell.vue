@@ -34,6 +34,7 @@ const activeTab = ref<ChatTab>('requests');
 const isLoadingMessages = ref(false);
 const isActionLoading = ref(false);
 const isSending = ref(false);
+const isFinishDialogOpen = ref(false);
 
 const selectedChat = computed(() => {
   if (!selectedChatId.value) return null;
@@ -452,11 +453,33 @@ async function updateChatStatus(status: ChatStatus) {
   }
 }
 
-async function finishChat() {
+function openFinishDialog() {
   if (!selectedChat.value || selectedChat.value.status !== 'accepted') return;
+  isFinishDialogOpen.value = true;
+}
+
+async function finishChatWithReview(payload: { rating: number | null; comment: string }) {
+  if (!selectedChat.value || !currentUserId.value || selectedChat.value.status !== 'accepted') return;
+
+  const companion = getCompanion(selectedChat.value);
+  if (!companion) return;
 
   try {
     isActionLoading.value = true;
+
+    if (payload.rating !== null) {
+      const { error: reviewError } = await supabase
+        .from('announcement_chat_reviews')
+        .insert({
+          chat_id: selectedChat.value.id,
+          reviewer_id: currentUserId.value,
+          reviewed_user_id: companion.id,
+          rating: payload.rating,
+          comment: payload.comment,
+        });
+
+      if (reviewError) throw reviewError;
+    }
 
     const { error } = await supabase.rpc('finish_announcement_chat', {
       target_chat_id: selectedChat.value.id,
@@ -470,9 +493,10 @@ async function finishChat() {
       updated_at: new Date().toISOString(),
     });
     syncActiveTabWithSelectedChat();
-    toast.success('Диалог завершён и перенесён в архив');
+    isFinishDialogOpen.value = false;
+    toast.success(payload.rating !== null ? 'Чат завершён. Спасибо за отзыв!' : 'Чат завершён');
   } catch (error: any) {
-    toast.error(error.message || 'Не удалось завершить диалог');
+    toast.error(error.message || 'Не удалось завершить чат');
   } finally {
     isActionLoading.value = false;
   }
@@ -691,10 +715,18 @@ onUnmounted(() => {
           :is-unread="isChatUnread(selectedChat)"
           @back="closeChat"
           @update-status="updateChatStatus"
-          @finish-chat="finishChat"
+          @finish-chat="openFinishDialog"
           @send-message="sendMessage"
         />
       </section>
     </div>
+
+    <profile-chat-finish-review-dialog
+      v-if="selectedChat"
+      v-model:open="isFinishDialogOpen"
+      :companion-name="getCompanionName(selectedChat)"
+      :is-submitting="isActionLoading"
+      @submit="finishChatWithReview"
+    />
   </div>
 </template>

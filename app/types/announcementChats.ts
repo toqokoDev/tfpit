@@ -41,3 +41,14 @@ export interface ChatMessage {
   created_at: string;
   sender: ChatUser | null;
 }
+
+export interface UserReview {
+  id: string;
+  chat_id: string;
+  reviewer_id: string;
+  reviewed_user_id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  reviewer: ChatUser | null;
+}

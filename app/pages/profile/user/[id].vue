@@ -1,16 +1,22 @@
 <script lang="ts" setup>
 import { Star, BriefcaseBusiness, Link as LinkIcon, ChevronLeft, ChevronRight, Globe, Send, Instagram, MessageCircle } from 'lucide-vue-next';
+import type { UserReview } from '../../../types/announcementChats';
 
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient<Database>();
+const { fetchRoleProfileForUser } = useRoleProfileData();
 
 const userId = computed(() => route.params.id as string);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
 const user = ref<any>(null);
+const roleData = ref<Record<string, unknown> | null>(null);
+const authUser = useSupabaseUser();
 const portfolios = ref<PortfolioSchema[]>([]);
 const isLoadingPortfolios = ref(false);
+const reviews = ref<UserReview[]>([]);
+const isLoadingReviews = ref(false);
 const activeTab = ref('profile');
 const selectedPortfolioImage = ref<{ portfolioId: string; imageIndex: number } | null>(null);
 
@@ -86,6 +92,15 @@ const fetchUser = async () => {
       socials: socialsData || {},
     };
 
+    if (authUser.value) {
+      roleData.value = await fetchRoleProfileForUser(
+        userId.value,
+        userData.role?.title,
+      );
+    } else {
+      roleData.value = null;
+    }
+
     useHead({
       title: `${user.value.first_name} ${user.value.last_name}`
     });
@@ -94,6 +109,35 @@ const fetchUser = async () => {
     console.error('Ошибка загрузки пользователя:', err);
   } finally {
     isLoading.value = false;
+  }
+};
+
+const fetchReviews = async () => {
+  try {
+    isLoadingReviews.value = true;
+
+    const { data, error: reviewsError } = await supabase
+      .from('announcement_chat_reviews')
+      .select(`
+        id,
+        chat_id,
+        reviewer_id,
+        reviewed_user_id,
+        rating,
+        comment,
+        created_at,
+        reviewer:users!announcement_chat_reviews_reviewer_id_fkey(id, first_name, last_name, avatar_url)
+      `)
+      .eq('reviewed_user_id', userId.value)
+      .order('created_at', { ascending: false });
+
+    if (reviewsError) throw reviewsError;
+
+    reviews.value = (data || []) as unknown as UserReview[];
+  } catch (err) {
+    console.error('Ошибка загрузки отзывов:', err);
+  } finally {
+    isLoadingReviews.value = false;
   }
 };
 
@@ -141,15 +185,102 @@ const fetchPortfolios = async () => {
 onMounted(async () => {
   await fetchUser();
   await fetchPortfolios();
+  await fetchReviews();
+});
+
+watch(authUser, async () => {
+  if (!user.value) return;
+
+  if (authUser.value) {
+    roleData.value = await fetchRoleProfileForUser(
+      userId.value,
+      user.value.role?.title,
+    );
+  } else {
+    roleData.value = null;
+  }
 });
 </script>
 
 <template>
-  <div class="flex items-center justify-center min-h-[calc(100vh-80px)] bg-muted/40 p-4">
-    <div v-if="isLoading" class="flex items-center justify-center">
-      <ui-spinner size="lg" />
-    </div>
-    
+  <div class="flex items-start justify-center min-h-[calc(100vh-80px)] bg-muted/40 p-4">
+    <ui-card v-if="isLoading" class="w-full max-w-2xl overflow-hidden pt-0">
+      <div class="relative">
+        <ui-skeleton class="h-48 w-full rounded-none" />
+        <div class="absolute -bottom-12 left-1/2 -translate-x-1/2">
+          <ui-skeleton class="h-36 w-36 rounded-full" />
+        </div>
+      </div>
+
+      <ui-card-header class="pt-6 text-center">
+        <ui-skeleton class="mx-auto h-7 w-48" />
+        <ui-skeleton class="mx-auto mt-2 h-4 w-64" />
+      </ui-card-header>
+
+      <ui-card-content class="space-y-6">
+        <div class="grid w-full grid-cols-2 gap-2">
+          <ui-skeleton class="h-9 w-full rounded-md" />
+          <ui-skeleton class="h-9 w-full rounded-md" />
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div class="space-y-6">
+            <div class="space-y-4">
+              <div class="space-y-2">
+                <ui-skeleton class="h-3 w-16" />
+                <ui-skeleton class="h-4 w-36" />
+              </div>
+              <div class="space-y-2">
+                <ui-skeleton class="h-3 w-12" />
+                <ui-skeleton class="h-4 w-44" />
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <ui-skeleton class="h-4 w-32" />
+              <div class="flex gap-3">
+                <ui-skeleton class="h-5 w-5 rounded-sm" />
+                <ui-skeleton class="h-5 w-5 rounded-sm" />
+                <ui-skeleton class="h-5 w-5 rounded-sm" />
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <ui-skeleton class="h-4 w-16" />
+            <ui-skeleton class="h-4 w-full" />
+            <ui-skeleton class="h-4 w-full" />
+            <ui-skeleton class="h-4 w-3/4" />
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <ui-skeleton class="h-4 w-28" />
+          <div class="space-y-1.5 rounded-lg border border-dashed bg-muted/40 p-3">
+            <ui-skeleton class="h-3 w-56" />
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div class="space-y-1.5">
+                <ui-skeleton class="h-3 w-20" />
+                <ui-skeleton class="h-4 w-full" />
+              </div>
+              <div class="space-y-1.5">
+                <ui-skeleton class="h-3 w-24" />
+                <ui-skeleton class="h-4 w-4/5" />
+              </div>
+              <div class="space-y-1.5">
+                <ui-skeleton class="h-3 w-16" />
+                <ui-skeleton class="h-4 w-3/5" />
+              </div>
+              <div class="space-y-1.5">
+                <ui-skeleton class="h-3 w-28" />
+                <ui-skeleton class="h-4 w-2/3" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </ui-card-content>
+    </ui-card>
+
     <div v-else-if="error" class="text-center">
       <p class="text-destructive">{{ error }}</p>
     </div>
@@ -188,7 +319,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <ui-card-header class="pt-10 text-center">
+      <ui-card-header class="pt-6 text-center">
         <ui-card-title class="text-2xl">
           {{ user.first_name }} {{ user.last_name }}
         </ui-card-title>
@@ -276,6 +407,16 @@ onMounted(async () => {
                 <p class="text-sm text-muted-foreground">Информация отсутствует</p>
               </div>
             </div>
+
+            <profile-role-additional-info
+              :role-title="user.role?.title"
+              :role-data="roleData"
+            />
+
+            <profile-user-reviews
+              :reviews="reviews"
+              :is-loading="isLoadingReviews"
+            />
           </ui-tabs-content>
 
           <ui-tabs-content value="portfolio" class="space-y-4">

@@ -173,7 +173,7 @@ watch(newMessage, async () => {
 
   <div v-else-if="chat.status === 'accepted'" class="border-b bg-background px-4 py-3">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p class="text-sm text-muted-foreground">Диалог активен. После завершения он будет перенесён в архив.</p>
+      <p class="text-sm text-muted-foreground">Чат активен. При завершении можно оставить отзыв.</p>
       <ui-button
         size="sm"
         variant="outline"
@@ -181,7 +181,7 @@ watch(newMessage, async () => {
         :disabled="isActionLoading"
         @click="emit('finishChat')"
       >
-        Завершить диалог
+        Завершить чат
       </ui-button>
     </div>
   </div>

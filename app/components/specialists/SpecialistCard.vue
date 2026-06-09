@@ -24,6 +24,7 @@ interface Specialist {
   experience_level: number | null;
   role: SelectOption | null;
   portfolio_previews: PortfolioPreview[];
+  role_data?: Record<string, unknown> | null;
 }
 
 const props = withDefaults(defineProps<{
@@ -83,13 +84,32 @@ function getPortfolioImageZIndex(portfolioId: string, imageIndex: number, imageC
       <ui-skeleton class="mx-auto mt-2 h-4 w-56" />
     </ui-card-header>
 
-    <ui-card-content class="space-y-4">
+    <ui-card-content class="space-y-2 pb-14">
       <div class="space-y-2">
-        <ui-skeleton class="h-4 w-20" />
-        <ui-skeleton class="h-4 w-full" />
+        <ui-skeleton class="h-4 w-16" />
+        <ui-skeleton class="min-h-10 h-10 w-full" />
         <ui-skeleton class="h-4 w-2/3" />
       </div>
-      <ui-skeleton class="h-28 w-full" />
+
+      <div class="space-y-2">
+        <ui-skeleton class="h-4 w-28" />
+        <div class="space-y-1.5 rounded-lg border border-dashed bg-muted/40 p-3">
+          <ui-skeleton class="h-3 w-56" />
+          <div class="space-y-1.5">
+            <ui-skeleton class="h-3 w-20" />
+            <ui-skeleton class="h-4 w-full" />
+            <ui-skeleton class="h-3 w-24" />
+            <ui-skeleton class="h-4 w-4/5" />
+            <ui-skeleton class="h-3 w-16" />
+            <ui-skeleton class="h-4 w-3/5" />
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <ui-skeleton class="h-4 w-24" />
+        <ui-skeleton class="h-40 w-full rounded-xl" />
+      </div>
     </ui-card-content>
   </ui-card>
 
@@ -142,13 +162,19 @@ function getPortfolioImageZIndex(portfolioId: string, imageIndex: number, imageC
       </ui-card-description>
     </ui-card-header>
 
-    <ui-card-content class="space-y-5">
+    <ui-card-content class="space-y-2 pb-14">
       <div class="space-y-2">
         <h3 class="text-sm font-semibold">О себе</h3>
         <p class="min-h-10 text-sm text-muted-foreground line-clamp-2">
           {{ specialist.bio || 'Информация отсутствует' }}
         </p>
       </div>
+
+      <profile-role-additional-info
+        :role-title="specialist.role?.title"
+        :role-data="specialist.role_data"
+        compact
+      />
 
       <div class="space-y-3">
         <h3 class="flex items-center gap-2 text-sm font-semibold">
