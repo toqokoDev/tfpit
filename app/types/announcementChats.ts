@@ -28,6 +28,8 @@ export interface AnnouncementChat {
   last_message_sender_id: string | null;
   owner_last_read_at: string | null;
   applicant_last_read_at: string | null;
+  owner_finished_at: string | null;
+  applicant_finished_at: string | null;
   announcement: ChatAnnouncement | null;
   applicant: ChatUser | null;
   owner: ChatUser | null;

@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { Star } from 'lucide-vue-next';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   open: boolean;
   companionName: string;
   isSubmitting: boolean;
-}>();
+  mode?: 'finish' | 'review';
+}>(), {
+  mode: 'finish',
+});
 
 const emit = defineEmits<{
   'update:open': [value: boolean];
@@ -15,6 +18,8 @@ const emit = defineEmits<{
 const rating = ref(0);
 const hoveredRating = ref(0);
 const comment = ref('');
+
+const isReviewMode = computed(() => props.mode === 'review');
 
 watch(() => props.open, (isOpen) => {
   if (!isOpen) {
@@ -42,9 +47,14 @@ function handleSubmit() {
   <ui-dialog :open="open" @update:open="emit('update:open', $event)">
     <ui-dialog-content class="sm:max-w-md">
       <ui-dialog-header>
-        <ui-dialog-title>Завершить чат</ui-dialog-title>
+        <ui-dialog-title>{{ isReviewMode ? 'Оставить отзыв' : 'Завершить чат' }}</ui-dialog-title>
         <ui-dialog-description>
-          При желании оцените работу с {{ companionName }}. Отзыв будет виден в профиле пользователя.
+          <template v-if="isReviewMode">
+            {{ companionName }} завершил чат. При желании оставьте отзыв — после этого чат попадёт в архив.
+          </template>
+          <template v-else>
+            При желании оцените работу с {{ companionName }}. Отзыв будет виден в профиле пользователя.
+          </template>
         </ui-dialog-description>
       </ui-dialog-header>
 
@@ -90,7 +100,7 @@ function handleSubmit() {
         </ui-button>
         <ui-button :disabled="isSubmitting" @click="handleSubmit">
           <ui-spinner v-if="isSubmitting" size="sm" class="mr-2" />
-          Завершить чат
+          {{ isReviewMode ? 'Отправить' : 'Завершить чат' }}
         </ui-button>
       </ui-dialog-footer>
     </ui-dialog-content>

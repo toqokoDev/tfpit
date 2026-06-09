@@ -35,6 +35,7 @@ const isLoadingMessages = ref(false);
 const isActionLoading = ref(false);
 const isSending = ref(false);
 const isFinishDialogOpen = ref(false);
+const finishDialogMode = ref<'finish' | 'review'>('finish');
 
 const selectedChat = computed(() => {
   if (!selectedChatId.value) return null;
@@ -56,6 +57,28 @@ const unreadResponseCount = computed(() => chatsByTab.responses.filter(isChatUnr
 const unreadArchiveCount = computed(() => chatsByTab.archive.filter(isChatUnread).length);
 const isActiveTabLoading = computed(() => loadingTabs[activeTab.value] || !loadedTabs[activeTab.value]);
 
+const selectedChatPendingReview = computed(() => isPendingReview(selectedChat.value));
+const selectedChatCurrentUserFinished = computed(() => hasUserFinished(selectedChat.value, currentUserId.value));
+
+function hasUserFinished(chat: AnnouncementChat | null, userId: string | null) {
+  if (!chat || !userId) return false;
+  if (chat.owner_id === userId) return !!chat.owner_finished_at;
+  if (chat.applicant_id === userId) return !!chat.applicant_finished_at;
+  return false;
+}
+
+function hasCompanionFinished(chat: AnnouncementChat | null) {
+  if (!chat || !currentUserId.value) return false;
+  if (chat.owner_id === currentUserId.value) return !!chat.applicant_finished_at;
+  if (chat.applicant_id === currentUserId.value) return !!chat.owner_finished_at;
+  return false;
+}
+
+function isPendingReview(chat: AnnouncementChat | null) {
+  if (!chat || !currentUserId.value) return false;
+  return chat.status === 'accepted' && hasCompanionFinished(chat) && !hasUserFinished(chat, currentUserId.value);
+}
+
 function getCompanion(chat: AnnouncementChat | null) {
   if (!chat) return null;
   return chat.owner_id === currentUserId.value ? chat.applicant : chat.owner;
@@ -67,14 +90,16 @@ function getCompanionName(chat: AnnouncementChat | null) {
   return `${user.first_name} ${user.last_name}`.trim() || 'Пользователь';
 }
 
-function getStatusText(status: ChatStatus) {
+function getStatusText(chat: AnnouncementChat) {
+  if (isPendingReview(chat)) return 'Ожидает отзыв';
+
   const statuses: Record<ChatStatus, string> = {
     pending: 'Ожидает',
     accepted: 'Активный',
     rejected: 'Архив',
     archived: 'Архив',
   };
-  return statuses[status];
+  return statuses[chat.status];
 }
 
 function getBadgeCount(count: number) {
@@ -83,6 +108,7 @@ function getBadgeCount(count: number) {
 
 function isChatUnread(chat: AnnouncementChat | null) {
   if (!chat || !currentUserId.value || chat.status === 'rejected' || chat.status === 'archived') return false;
+  if (isPendingReview(chat)) return true;
 
   const latestAt = chat.last_message_at || chat.created_at;
   const latestSenderId = chat.last_message_sender_id || chat.applicant_id;
@@ -110,13 +136,8 @@ function getEmptyText() {
 
 function syncActiveTabWithSelectedChat() {
   if (!selectedChat.value) return;
-  if (selectedChat.value.status === 'rejected' || selectedChat.value.status === 'archived') {
-    activeTab.value = 'archive';
-  } else if (selectedChat.value.owner_id === currentUserId.value) {
-    activeTab.value = 'requests';
-  } else {
-    activeTab.value = 'responses';
-  }
+  const tab = getChatTab(selectedChat.value);
+  if (tab) activeTab.value = tab;
 }
 
 function chatSelectQuery() {
@@ -133,6 +154,8 @@ function chatSelectQuery() {
     last_message_sender_id,
     owner_last_read_at,
     applicant_last_read_at,
+    owner_finished_at,
+    applicant_finished_at,
     announcement:announcements!announcement_chats_announcement_id_fkey(id, title, city, references_urls),
     applicant:users!announcement_chats_applicant_id_fkey(id, first_name, last_name, avatar_url),
     owner:users!announcement_chats_owner_id_fkey(id, first_name, last_name, avatar_url)
@@ -141,9 +164,13 @@ function chatSelectQuery() {
 
 function getChatTab(chat: AnnouncementChat): ChatTab | null {
   if (!currentUserId.value) return null;
+
+  const userId = currentUserId.value;
+
   if (chat.status === 'rejected' || chat.status === 'archived') return 'archive';
-  if (chat.owner_id === currentUserId.value) return 'requests';
-  if (chat.applicant_id === currentUserId.value) return 'responses';
+  if (hasUserFinished(chat, userId)) return 'archive';
+  if (chat.owner_id === userId) return 'requests';
+  if (chat.applicant_id === userId) return 'responses';
   return null;
 }
 
@@ -170,11 +197,19 @@ async function loadChatsForTab(tab: ChatTab, force = false) {
       .order('updated_at', { ascending: false });
 
     if (tab === 'requests') {
-      query = query.eq('owner_id', userId).not('status', 'in', '(rejected,archived)');
+      query = query
+        .eq('owner_id', userId)
+        .not('status', 'in', '(rejected,archived)')
+        .is('owner_finished_at', null);
     } else if (tab === 'responses') {
-      query = query.eq('applicant_id', userId).not('status', 'in', '(rejected,archived)');
+      query = query
+        .eq('applicant_id', userId)
+        .not('status', 'in', '(rejected,archived)')
+        .is('applicant_finished_at', null);
     } else {
-      query = query.or(`owner_id.eq.${userId},applicant_id.eq.${userId}`).in('status', ['rejected', 'archived']);
+      query = query
+        .or(`owner_id.eq.${userId},applicant_id.eq.${userId}`)
+        .or(`status.in.(rejected,archived),and(owner_id.eq.${userId},owner_finished_at.not.is.null),and(applicant_id.eq.${userId},applicant_finished_at.not.is.null)`);
     }
 
     const { data, error } = await query;
@@ -245,23 +280,7 @@ async function loadMessages() {
 async function loadChatById(chatId: string) {
   const { data, error } = await supabase
     .from('announcement_chats')
-    .select(`
-      id,
-      announcement_id,
-      applicant_id,
-      owner_id,
-      status,
-      initial_message,
-      created_at,
-      updated_at,
-      last_message_at,
-      last_message_sender_id,
-      owner_last_read_at,
-      applicant_last_read_at,
-      announcement:announcements!announcement_chats_announcement_id_fkey(id, title, city, references_urls),
-      applicant:users!announcement_chats_applicant_id_fkey(id, first_name, last_name, avatar_url),
-      owner:users!announcement_chats_owner_id_fkey(id, first_name, last_name, avatar_url)
-    `)
+    .select(chatSelectQuery())
     .eq('id', chatId)
     .maybeSingle();
 
@@ -454,12 +473,37 @@ async function updateChatStatus(status: ChatStatus) {
 }
 
 function openFinishDialog() {
-  if (!selectedChat.value || selectedChat.value.status !== 'accepted') return;
+  if (!selectedChat.value || selectedChat.value.status !== 'accepted' || hasUserFinished(selectedChat.value, currentUserId.value)) return;
+  finishDialogMode.value = 'finish';
   isFinishDialogOpen.value = true;
 }
 
-async function finishChatWithReview(payload: { rating: number | null; comment: string }) {
+function openReviewDialog() {
+  if (!selectedChat.value || !isPendingReview(selectedChat.value)) return;
+  finishDialogMode.value = 'review';
+  isFinishDialogOpen.value = true;
+}
+
+function applyFinishToChat(chat: AnnouncementChat): AnnouncementChat {
+  const userId = currentUserId.value!;
+  const now = new Date().toISOString();
+  const isOwner = chat.owner_id === userId;
+  const ownerFinishedAt = isOwner ? (chat.owner_finished_at || now) : chat.owner_finished_at;
+  const applicantFinishedAt = !isOwner ? (chat.applicant_finished_at || now) : chat.applicant_finished_at;
+
+  return {
+    ...chat,
+    owner_finished_at: ownerFinishedAt,
+    applicant_finished_at: applicantFinishedAt,
+    status: ownerFinishedAt && applicantFinishedAt ? 'archived' : chat.status,
+    updated_at: now,
+  };
+}
+
+async function completeChatWithReview(payload: { rating: number | null; comment: string }) {
   if (!selectedChat.value || !currentUserId.value || selectedChat.value.status !== 'accepted') return;
+  if (finishDialogMode.value === 'finish' && hasUserFinished(selectedChat.value, currentUserId.value)) return;
+  if (finishDialogMode.value === 'review' && !isPendingReview(selectedChat.value)) return;
 
   const companion = getCompanion(selectedChat.value);
   if (!companion) return;
@@ -487,14 +531,15 @@ async function finishChatWithReview(payload: { rating: number | null; comment: s
 
     if (error) throw error;
 
-    upsertChat({
-      ...selectedChat.value,
-      status: 'archived',
-      updated_at: new Date().toISOString(),
-    });
+    upsertChat(applyFinishToChat(selectedChat.value));
     syncActiveTabWithSelectedChat();
     isFinishDialogOpen.value = false;
-    toast.success(payload.rating !== null ? 'Чат завершён. Спасибо за отзыв!' : 'Чат завершён');
+
+    if (finishDialogMode.value === 'review') {
+      toast.success(payload.rating !== null ? 'Отзыв отправлен. Чат перенесён в архив.' : 'Чат перенесён в архив');
+    } else {
+      toast.success(payload.rating !== null ? 'Чат завершён. Спасибо за отзыв!' : 'Чат завершён');
+    }
   } catch (error: any) {
     toast.error(error.message || 'Не удалось завершить чат');
   } finally {
@@ -504,6 +549,7 @@ async function finishChatWithReview(payload: { rating: number | null; comment: s
 
 async function sendMessage(body: string) {
   if (!body || !currentUserId.value || !selectedChatId.value || selectedChat.value?.status !== 'accepted') return;
+  if (hasUserFinished(selectedChat.value, currentUserId.value) || hasCompanionFinished(selectedChat.value)) return;
 
   try {
     isSending.value = true;
@@ -667,8 +713,8 @@ onUnmounted(() => {
                     </p>
                     <div class="mt-2 flex items-center justify-between gap-2">
                       <p class="line-clamp-1 text-sm">{{ chat.initial_message }}</p>
-                      <ui-badge :variant="chat.status === 'accepted' ? 'default' : chat.status === 'pending' ? 'secondary' : 'outline'">
-                    {{ getStatusText(chat.status) }}
+                      <ui-badge :variant="isPendingReview(chat) ? 'secondary' : chat.status === 'accepted' ? 'default' : chat.status === 'pending' ? 'secondary' : 'outline'">
+                    {{ getStatusText(chat) }}
                       </ui-badge>
                     </div>
                   </div>
@@ -713,9 +759,12 @@ onUnmounted(() => {
           :is-action-loading="isActionLoading"
           :is-sending="isSending"
           :is-unread="isChatUnread(selectedChat)"
+          :pending-review="selectedChatPendingReview"
+          :current-user-finished="selectedChatCurrentUserFinished"
           @back="closeChat"
           @update-status="updateChatStatus"
           @finish-chat="openFinishDialog"
+          @leave-review="openReviewDialog"
           @send-message="sendMessage"
         />
       </section>
@@ -724,9 +773,10 @@ onUnmounted(() => {
     <profile-chat-finish-review-dialog
       v-if="selectedChat"
       v-model:open="isFinishDialogOpen"
+      :mode="finishDialogMode"
       :companion-name="getCompanionName(selectedChat)"
       :is-submitting="isActionLoading"
-      @submit="finishChatWithReview"
+      @submit="completeChatWithReview"
     />
   </div>
 </template>

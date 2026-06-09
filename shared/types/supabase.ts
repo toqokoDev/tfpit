@@ -195,6 +195,7 @@ export type Database = {
       announcement_chats: {
         Row: {
           announcement_id: string
+          applicant_finished_at: string | null
           applicant_last_read_at: string | null
           applicant_id: string
           created_at: string
@@ -202,6 +203,7 @@ export type Database = {
           initial_message: string
           last_message_at: string | null
           last_message_sender_id: string | null
+          owner_finished_at: string | null
           owner_last_read_at: string | null
           owner_id: string
           status: string
@@ -209,6 +211,7 @@ export type Database = {
         }
         Insert: {
           announcement_id: string
+          applicant_finished_at?: string | null
           applicant_last_read_at?: string | null
           applicant_id: string
           created_at?: string
@@ -216,6 +219,7 @@ export type Database = {
           initial_message?: string
           last_message_at?: string | null
           last_message_sender_id?: string | null
+          owner_finished_at?: string | null
           owner_last_read_at?: string | null
           owner_id: string
           status?: string
@@ -223,6 +227,7 @@ export type Database = {
         }
         Update: {
           announcement_id?: string
+          applicant_finished_at?: string | null
           applicant_last_read_at?: string | null
           applicant_id?: string
           created_at?: string
@@ -230,6 +235,7 @@ export type Database = {
           initial_message?: string
           last_message_at?: string | null
           last_message_sender_id?: string | null
+          owner_finished_at?: string | null
           owner_last_read_at?: string | null
           owner_id?: string
           status?: string

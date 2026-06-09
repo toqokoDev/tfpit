@@ -10,12 +10,15 @@ const props = defineProps<{
   isActionLoading: boolean;
   isSending: boolean;
   isUnread: boolean;
+  pendingReview: boolean;
+  currentUserFinished: boolean;
 }>();
 
 const emit = defineEmits<{
   back: [];
   updateStatus: [status: ChatStatus];
   finishChat: [];
+  leaveReview: [];
   sendMessage: [body: string];
 }>();
 
@@ -72,7 +75,7 @@ function resizeMessageInput() {
 
 async function handleSendMessage() {
   const body = newMessage.value.trim();
-  if (!body || props.chat.status !== 'accepted') return;
+  if (!body || props.chat.status !== 'accepted' || props.pendingReview || props.currentUserFinished) return;
 
   shouldScrollAfterSend.value = true;
   emit('sendMessage', body);
@@ -137,8 +140,8 @@ watch(newMessage, async () => {
       >
         1
       </span>
-      <ui-badge :variant="chat.status === 'accepted' ? 'default' : chat.status === 'pending' ? 'secondary' : 'outline'">
-        {{ chat.status === 'accepted' ? 'Принят' : chat.status === 'pending' ? 'Ожидает' : 'Архив' }}
+      <ui-badge :variant="pendingReview ? 'secondary' : chat.status === 'accepted' ? 'default' : chat.status === 'pending' ? 'secondary' : 'outline'">
+        {{ pendingReview ? 'Ожидает отзыв' : chat.status === 'accepted' ? 'Принят' : chat.status === 'pending' ? 'Ожидает' : 'Архив' }}
       </ui-badge>
     </div>
   </header>
@@ -167,8 +170,22 @@ watch(newMessage, async () => {
     Отклик отклонен. Чат находится в архиве.
   </div>
 
-  <div v-else-if="chat.status === 'archived'" class="border-b bg-background px-4 py-3 text-center text-sm text-muted-foreground">
+  <div v-else-if="chat.status === 'archived' || currentUserFinished" class="border-b bg-background px-4 py-3 text-center text-sm text-muted-foreground">
     Диалог завершён и находится в архиве.
+  </div>
+
+  <div v-else-if="pendingReview" class="border-b bg-background px-4 py-3">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <p class="text-sm text-muted-foreground">{{ companionName }} завершил чат. Оставьте отзыв, чтобы перенести его в архив.</p>
+      <ui-button
+        size="sm"
+        class="rounded-full"
+        :disabled="isActionLoading"
+        @click="emit('leaveReview')"
+      >
+        Оставить отзыв
+      </ui-button>
+    </div>
   </div>
 
   <div v-else-if="chat.status === 'accepted'" class="border-b bg-background px-4 py-3">
@@ -252,7 +269,7 @@ watch(newMessage, async () => {
     </button>
   </div>
 
-  <form v-if="chat.status === 'accepted'" class="border-t bg-background p-3 sm:p-4" @submit.prevent="handleSendMessage">
+  <form v-if="chat.status === 'accepted' && !pendingReview && !currentUserFinished" class="border-t bg-background p-3 sm:p-4" @submit.prevent="handleSendMessage">
     <div class="flex items-end gap-2 rounded-[1.75rem] border bg-transparent px-4 py-2 focus-within:border-primary/60">
       <textarea
         ref="messageInput"
