@@ -12,7 +12,6 @@ const isLoading = ref(true);
 const error = ref<string | null>(null);
 const user = ref<any>(null);
 const roleData = ref<Record<string, unknown> | null>(null);
-const authUser = useSupabaseUser();
 const portfolios = ref<PortfolioSchema[]>([]);
 const isLoadingPortfolios = ref(false);
 const reviews = ref<UserReview[]>([]);
@@ -92,14 +91,10 @@ const fetchUser = async () => {
       socials: socialsData || {},
     };
 
-    if (authUser.value) {
-      roleData.value = await fetchRoleProfileForUser(
-        userId.value,
-        userData.role?.title,
-      );
-    } else {
-      roleData.value = null;
-    }
+    roleData.value = await fetchRoleProfileForUser(
+      userId.value,
+      userData.role?.title,
+    );
 
     useHead({
       title: `${user.value.first_name} ${user.value.last_name}`
@@ -188,18 +183,6 @@ onMounted(async () => {
   await fetchReviews();
 });
 
-watch(authUser, async () => {
-  if (!user.value) return;
-
-  if (authUser.value) {
-    roleData.value = await fetchRoleProfileForUser(
-      userId.value,
-      user.value.role?.title,
-    );
-  } else {
-    roleData.value = null;
-  }
-});
 </script>
 
 <template>
@@ -257,7 +240,6 @@ watch(authUser, async () => {
         <div class="space-y-2">
           <ui-skeleton class="h-4 w-28" />
           <div class="space-y-1.5 rounded-lg border border-dashed bg-muted/40 p-3">
-            <ui-skeleton class="h-3 w-56" />
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div class="space-y-1.5">
                 <ui-skeleton class="h-3 w-20" />

@@ -94,7 +94,6 @@ function getPortfolioImageZIndex(portfolioId: string, imageIndex: number, imageC
       <div class="space-y-2">
         <ui-skeleton class="h-4 w-28" />
         <div class="space-y-1.5 rounded-lg border border-dashed bg-muted/40 p-3">
-          <ui-skeleton class="h-3 w-56" />
           <div class="space-y-1.5">
             <ui-skeleton class="h-3 w-20" />
             <ui-skeleton class="h-4 w-full" />

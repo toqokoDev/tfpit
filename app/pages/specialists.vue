@@ -31,7 +31,6 @@ interface Specialist {
 const route = useRoute();
 const router = useRouter();
 const supabase = useSupabaseClient<Database>();
-const authUser = useSupabaseUser();
 const { fetchRoleProfilesForUsers } = useRoleProfileData();
 
 const ITEMS_PER_PAGE = 12;
@@ -199,9 +198,7 @@ async function fetchSpecialists() {
       }
     }
 
-    const roleDataByUser = authUser.value
-      ? await fetchRoleProfilesForUsers(specialistsData)
-      : new Map<string, Record<string, unknown>>();
+    const roleDataByUser = await fetchRoleProfilesForUsers(specialistsData);
 
     specialists.value = specialistsData.map(specialist => ({
       ...specialist,
